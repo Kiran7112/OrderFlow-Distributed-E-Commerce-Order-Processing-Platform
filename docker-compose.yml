@@ -1,4 +1,4 @@
-version: '3.8'
+# Docker Compose v2 — the top-level `version:` key is obsolete and intentionally omitted.
 
 services:
   # Zookeeper for Kafka coordination

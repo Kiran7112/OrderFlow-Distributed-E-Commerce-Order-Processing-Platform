@@ -205,6 +205,8 @@ docker-compose up -d --build  # re-runs init SQL + topic creation
 
 | Symptom | Fix |
 |---|---|
+| `permission denied … /var/run/docker.sock` | Your shell predates the `docker` group change. Run `newgrp docker` or log out/in; or prefix `sudo`. |
+| `the attribute version is obsolete` warning | Harmless Compose v2 notice — the `version:` key has been removed from `docker-compose.yml`. |
 | `kafka-init` keeps restarting | It shouldn't — it has `restart: "no"`. Check `docker-compose logs kafka-init`; ensure Kafka is healthy first. |
 | Service can't reach DB | `docker-compose logs <service>`; confirm `postgres` is healthy and the per-service DB exists. |
 | Consumer lag growing | A consumer is down or erroring. Check that service's logs; restart it. |

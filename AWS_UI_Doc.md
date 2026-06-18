@@ -483,7 +483,8 @@ In the AWS Console: **EC2 → Instances → select `orderflow-server` → Instan
 | **Connection timed out (SSH)** | Your IP changed — edit `orderflow-sg` → SSH rule → set Source to **My IP** again. |
 | **Browser can't open :3000 or :8080** | Confirm ports 3000 & 8080 are open in `orderflow-sg` with Source `0.0.0.0/0`. Confirm instance is **Running** and containers are **Up**. |
 | **A service shows "Restarting" or unhealthy** | `docker-compose logs <service-name>` to see the error. Often it just needs Kafka/Postgres to finish starting — wait 30s and re-check `docker-compose ps`. |
-| **"Cannot connect to the Docker daemon"** | Log out and SSH back in (the setup added you to the `docker` group), or use `sudo docker-compose ...`. |
+| **"permission denied … /var/run/docker.sock"** or **"Cannot connect to the Docker daemon"** | Your session predates the `docker` group change. Run `newgrp docker` (applies it now), or log out and SSH back in. One-off workaround: prefix with `sudo` (e.g. `sudo docker-compose ps`). |
+| **`the attribute version is obsolete` warning** | Harmless — just a Compose v2 notice. It's already removed from `docker-compose.yml`; re-pull the latest project if you still see it. |
 | **Out of memory / containers killed** | You're on too small an instance. Use `t3.large` (8 GB) or bigger. |
 | **Frontend loads but no data / network errors** | `.env` `EC2_HOST` must be your **public IP**, and you must rebuild the frontend after changing it: `docker-compose up -d --build frontend`. |
 | **First build seems stuck** | It's downloading Maven/npm dependencies. Give it 5–10 minutes. Watch with `docker-compose logs -f`. |

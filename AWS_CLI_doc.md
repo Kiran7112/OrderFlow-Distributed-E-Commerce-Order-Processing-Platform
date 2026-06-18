@@ -592,6 +592,8 @@ rm -f "$HOME/$KEY_NAME.pem"
 | SSH `Permission denied (publickey)` | `chmod 400 ~/orderflow-key.pem`; ensure you connect as user `ubuntu`. |
 | SSH `Connection timed out` | Your IP changed. Re-add the SSH rule with your new IP, or check the instance is `running`. |
 | Browser can't reach :3000 / :8080 | Confirm SG rules for 3000 & 8080 (`0.0.0.0/0`) and that containers are `Up`. |
+| `permission denied … /var/run/docker.sock` | Session predates the `docker` group change. Run `newgrp docker` or log out/in; or use `sudo docker-compose ...`. |
+| `the attribute version is obsolete` warning | Harmless Compose v2 notice; already removed from `docker-compose.yml`. |
 | Service unhealthy / restarting | `docker-compose logs <service>`; usually just needs Kafka/Postgres to finish booting — wait 30s. |
 | Out of memory | Use `t3.large` or larger (needs 8 GB RAM). |
 | Frontend shows no data | `.env` `EC2_HOST` must be the public IP; rebuild: `docker-compose up -d --build frontend`. |
