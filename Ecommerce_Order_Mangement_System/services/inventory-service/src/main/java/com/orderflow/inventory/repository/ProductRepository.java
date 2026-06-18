@@ -1,0 +1,15 @@
+package com.orderflow.inventory.repository;
+
+import com.orderflow.inventory.entity.Product;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.stereotype.Repository;
+
+import java.util.Optional;
+import java.util.UUID;
+
+@Repository
+public interface ProductRepository extends JpaRepository<Product, UUID> {
+    Optional<Product> findBySku(String sku);
+    java.util.List<Product> findByCategory(String category);
+    java.util.List<Product> findByIsActive(Boolean isActive);
+}

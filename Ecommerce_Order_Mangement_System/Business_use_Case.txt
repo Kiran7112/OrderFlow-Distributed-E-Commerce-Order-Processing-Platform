@@ -1,0 +1,345 @@
+# E-Commerce Order Processing Platform
+## Complete Business Use Case Document
+### Tech Stack: React (Frontend) + Java Spring Boot (Backend) + Apache Kafka
+
+---
+
+## 1. Project Overview
+
+**Project Name:** OrderFlow — Distributed E-Commerce Order Processing Platform  
+**Type:** Microservices-based full-stack web application  
+**Target Companies:** Amazon, Microsoft, Flipkart, Walmart Labs, PayPal  
+**Tech Stack:** React 18, Java 17, Spring Boot 3, Apache Kafka, PostgreSQL, Redis, Docker, Kubernetes
+
+---
+
+## 2. Business Problem Statement
+
+Modern e-commerce platforms process millions of orders per day. A monolithic architecture cannot handle:
+- High-throughput order ingestion during peak sales (flash sales, Black Friday)
+- Independent scaling of payment vs. inventory vs. shipping services
+- Partial failure recovery without cancelling the entire order
+- Real-time order tracking for customers and operations teams
+
+**OrderFlow** solves this by decomposing the order lifecycle into independent microservices communicating via Apache Kafka, with each service owning its data and scaling independently.
+
+---
+
+## 3. Business Actors
+
+| Actor | Role |
+|---|---|
+| Customer | Browses products, places orders, tracks delivery |
+| Warehouse Staff | Views inventory alerts, updates stock levels |
+| Payment Team | Monitors payment success/failure rates |
+| Operations Manager | Views order pipeline dashboard and KPIs |
+| System Admin | Manages service health, Kafka consumer lag |
+
+---
+
+## 4. Core Microservices
+
+### 4.1 API Gateway Service
+- **Technology:** Spring Cloud Gateway
+- **Port:** 8080
+- **Responsibility:** Single entry point for all client requests. Routes to downstream services, handles JWT authentication, rate limiting (100 req/min per user), and request logging.
+
+### 4.2 Order Service
+- **Technology:** Spring Boot + PostgreSQL
+- **Port:** 8081
+- **Responsibility:** Creates and manages order lifecycle. Publishes `order.placed` event to Kafka on every new order.
+- **Database:** `orders_db` — stores order ID, customer ID, items, total amount, status (PLACED / CONFIRMED / SHIPPED / DELIVERED / CANCELLED)
+- **Kafka Producer:** Publishes to topic `order-events`
+
+### 4.3 Inventory Service
+- **Technology:** Spring Boot + PostgreSQL + Redis
+- **Port:** 8082
+- **Responsibility:** Listens for `order.placed` events. Checks stock availability. Reserves units (optimistic locking). Publishes `inventory.reserved` or `inventory.insufficient` events.
+- **Database:** `inventory_db` — product catalogue, stock counts, reservations
+- **Cache:** Redis for hot product stock counts (TTL: 30 seconds)
+- **Kafka Consumer:** Listens to `order-events` | Producer: Publishes to `inventory-events`
+
+### 4.4 Payment Service
+- **Technology:** Spring Boot + PostgreSQL
+- **Port:** 8083
+- **Responsibility:** Listens for `inventory.reserved` event. Processes payment via mock payment gateway (Stripe/Razorpay integration). Publishes `payment.success` or `payment.failed`.
+- **Database:** `payments_db` — transaction ID, order ID, amount, status, timestamp
+- **Kafka Consumer:** Listens to `inventory-events` | Producer: Publishes to `payment-events`
+
+### 4.5 Notification Service
+- **Technology:** Spring Boot
+- **Port:** 8084
+- **Responsibility:** Listens to ALL event topics. Sends email/SMS notifications to customer at each stage (order placed → payment confirmed → shipped → delivered). Uses async processing — never blocks the main order flow.
+- **Kafka Consumer:** Subscribes to `order-events`, `payment-events`, `shipping-events`
+
+### 4.6 Shipping Service
+- **Technology:** Spring Boot + PostgreSQL
+- **Port:** 8085
+- **Responsibility:** Listens for `payment.success`. Creates shipment record, assigns tracking ID, simulates courier partner dispatch. Publishes `shipment.created` and `shipment.delivered` events.
+- **Database:** `shipping_db` — shipment ID, order ID, tracking number, estimated delivery, status
+- **Kafka Consumer:** Listens to `payment-events` | Producer: Publishes to `shipping-events`
+
+### 4.7 Analytics Service
+- **Technology:** Spring Boot + PostgreSQL (TimescaleDB extension)
+- **Port:** 8086
+- **Responsibility:** Consumes all events from all topics. Aggregates metrics: orders per minute, revenue by hour, failure rates, average fulfillment time. Exposes REST API for the React dashboard.
+
+---
+
+## 5. Kafka Architecture
+
+### Topics
+| Topic Name | Produced By | Consumed By |
+|---|---|---|
+| `order-events` | Order Service | Inventory Service, Notification Service, Analytics Service |
+| `inventory-events` | Inventory Service | Payment Service, Analytics Service |
+| `payment-events` | Payment Service | Shipping Service, Notification Service, Analytics Service |
+| `shipping-events` | Shipping Service | Notification Service, Analytics Service |
+| `dlq-events` (Dead Letter Queue) | All services (on failure) | Alert Service / manual review |
+
+### Kafka Configuration
+- **Partitions:** 6 per topic (allows parallel consumers)
+- **Replication factor:** 3 (fault tolerance)
+- **Consumer Groups:** Each service has its own consumer group ID
+- **Offset management:** Manual commit after successful processing
+- **Schema Registry:** Avro schemas for all events (ensures backward compatibility)
+
+---
+
+## 6. Complete Order Flow — Step by Step
+
+```
+STEP 1: Customer places order on React UI
+        → POST /api/orders → API Gateway → Order Service
+        → Order saved to orders_db (status: PLACED)
+        → Kafka message published to "order-events" topic
+        → Customer sees "Order Placed" confirmation
+
+STEP 2: Inventory Service consumes "order.placed" event
+        → Checks Redis cache for stock count
+        → If available: reserves stock, updates inventory_db
+        → Publishes "inventory.reserved" to "inventory-events"
+        → If unavailable: publishes "inventory.insufficient"
+        → Order Service updates order status to CONFIRMED / FAILED
+
+STEP 3: Payment Service consumes "inventory.reserved" event
+        → Calls payment gateway API (Stripe)
+        → On success: saves transaction to payments_db
+        → Publishes "payment.success" to "payment-events"
+        → On failure: publishes "payment.failed"
+        → Saga compensation: triggers inventory rollback event
+
+STEP 4: Shipping Service consumes "payment.success" event
+        → Creates shipment record in shipping_db
+        → Assigns tracking ID (e.g., TRK-2024-98765)
+        → Publishes "shipment.created" to "shipping-events"
+        → Simulates delivery after configurable delay
+        → Publishes "shipment.delivered"
+
+STEP 5: Notification Service runs in parallel
+        → Sends email at each step (PLACED, PAID, SHIPPED, DELIVERED)
+        → Uses async processing — does not block order pipeline
+
+STEP 6: Analytics Service aggregates all events
+        → React dashboard shows live order counts, revenue, failures
+```
+
+---
+
+## 7. Saga Pattern — Distributed Transaction Handling
+
+The saga pattern handles failures across services without a two-phase commit (which doesn't scale).
+
+### Happy Path
+`PLACED → INVENTORY_RESERVED → PAYMENT_SUCCESS → SHIPPED → DELIVERED`
+
+### Failure Scenarios & Compensations
+
+**Scenario A — Inventory insufficient:**
+- Inventory Service publishes `inventory.insufficient`
+- Order Service listens and updates order status to `CANCELLED`
+- Notification Service sends "Out of stock" email to customer
+
+**Scenario B — Payment failed:**
+- Payment Service publishes `payment.failed`
+- Inventory Service listens and releases the stock reservation
+- Order Service marks order as `PAYMENT_FAILED`
+- Notification Service sends "Payment failed" email with retry link
+
+**Scenario C — Service crash mid-flow:**
+- Kafka retains unacknowledged messages
+- Service restarts and reprocesses from last committed offset
+- Idempotency keys on each service prevent duplicate processing
+
+---
+
+## 8. React Frontend — Pages & Features
+
+### 8.1 Customer Portal
+- **Home / Product Listing:** Browse products with real-time stock badge ("Only 3 left")
+- **Cart:** Add/remove items, see total with tax
+- **Checkout:** Address + payment form, order summary
+- **Order Tracking Page:** Live status timeline (Placed → Confirmed → Shipped → Delivered) via polling or WebSocket
+- **Order History:** Past orders with receipt download
+
+### 8.2 Operations Dashboard (Internal)
+- **Live Order Pipeline:** Real-time count of orders in each stage (using SSE / WebSocket from Analytics Service)
+- **Revenue Chart:** Hourly/daily revenue using Recharts line chart
+- **Failure Rate Monitor:** Payment failure %, inventory shortage % per hour
+- **Kafka Consumer Lag Panel:** Shows how far behind each consumer is (fetched from Kafka JMX metrics)
+- **Service Health Grid:** Green/yellow/red status per microservice (Spring Boot Actuator endpoints)
+
+### 8.3 Inventory Management Portal
+- **Stock Dashboard:** Low stock alerts, current reservation counts
+- **Product CRUD:** Add/edit products, update stock
+- **Reservation History:** Which orders have reserved which SKUs
+
+---
+
+## 9. API Design (REST)
+
+### Order Service APIs
+```
+POST   /api/orders                  → Place new order
+GET    /api/orders/{orderId}        → Get order details + status
+GET    /api/orders/customer/{id}    → Get all orders for a customer
+PATCH  /api/orders/{orderId}/cancel → Cancel order (if before SHIPPED)
+```
+
+### Inventory Service APIs
+```
+GET    /api/inventory/{productId}   → Get stock count
+PUT    /api/inventory/{productId}   → Update stock (admin only)
+GET    /api/inventory/low-stock     → Products below threshold
+```
+
+### Analytics Service APIs
+```
+GET    /api/analytics/orders/summary     → Orders per hour today
+GET    /api/analytics/revenue/daily      → Revenue last 30 days
+GET    /api/analytics/failures           → Failure rates by type
+GET    /api/analytics/kafka/consumer-lag → Consumer lag per group
+```
+
+---
+
+## 10. Database Schema (Key Tables)
+
+### orders_db
+```
+orders (id UUID PK, customer_id, status, total_amount, created_at, updated_at)
+order_items (id, order_id FK, product_id, quantity, unit_price)
+```
+
+### inventory_db
+```
+products (id UUID PK, name, description, price, category)
+stock (product_id FK, available_qty, reserved_qty, updated_at)
+```
+
+### payments_db
+```
+transactions (id UUID PK, order_id, amount, currency, gateway_ref, status, created_at)
+```
+
+### shipping_db
+```
+shipments (id UUID PK, order_id, tracking_number, carrier, status, estimated_delivery, created_at)
+```
+
+---
+
+## 11. Tech Stack Summary
+
+| Layer | Technology | Version |
+|---|---|---|
+| Frontend | React + TypeScript | 18 |
+| UI Library | Tailwind CSS + shadcn/ui | latest |
+| State Management | Redux Toolkit + RTK Query | latest |
+| Backend Framework | Spring Boot | 3.2 |
+| Language | Java | 17 |
+| API Gateway | Spring Cloud Gateway | latest |
+| Message Broker | Apache Kafka | 3.6 |
+| Schema Registry | Confluent Schema Registry | latest |
+| Primary Database | PostgreSQL | 15 |
+| Cache | Redis | 7 |
+| Containerization | Docker + Docker Compose | latest |
+| Orchestration | Kubernetes (minikube for local) | latest |
+| Service Discovery | Spring Cloud Eureka | latest |
+| Monitoring | Prometheus + Grafana | latest |
+| Auth | Spring Security + JWT | latest |
+| Testing | JUnit 5 + Testcontainers | latest |
+
+---
+
+## 12. Project Folder Structure
+
+```
+orderflow/
+├── frontend/                        # React + TypeScript
+│   ├── src/
+│   │   ├── pages/
+│   │   │   ├── CustomerPortal/
+│   │   │   ├── OperationsDashboard/
+│   │   │   └── InventoryPortal/
+│   │   ├── components/
+│   │   ├── store/                   # Redux slices
+│   │   └── services/                # RTK Query API calls
+│   └── package.json
+│
+├── services/
+│   ├── api-gateway/                 # Spring Cloud Gateway
+│   ├── order-service/               # Spring Boot
+│   ├── inventory-service/           # Spring Boot
+│   ├── payment-service/             # Spring Boot
+│   ├── notification-service/        # Spring Boot
+│   ├── shipping-service/            # Spring Boot
+│   └── analytics-service/           # Spring Boot
+│
+├── infrastructure/
+│   ├── kafka/                       # Docker Compose for Kafka + Zookeeper
+│   ├── postgres/                    # Init SQL scripts per service
+│   └── redis/
+│
+├── k8s/                             # Kubernetes manifests
+│   ├── deployments/
+│   ├── services/
+│   └── configmaps/
+│
+└── docker-compose.yml               # Spin up everything locally
+```
+
+---
+
+## 13. Key Interview Talking Points
+
+1. **Why Kafka over REST between services?** — Decouples services, handles backpressure, allows replay of events, and provides durability. REST calls would create tight coupling and cascading failures.
+
+2. **How do you prevent duplicate order processing?** — Every Kafka consumer checks an idempotency key (order ID) before processing. If already processed, it skips and commits the offset.
+
+3. **How does the saga handle a payment failure after inventory was reserved?** — Payment Service publishes `payment.failed`. Inventory Service has a compensating consumer that listens for this and releases the reservation atomically.
+
+4. **Why does each service have its own database?** — This is the database-per-service pattern. It enforces loose coupling — Inventory Service schema changes don't require Order Service deployments.
+
+5. **How do you scale the system during a flash sale?** — Kafka partitions allow horizontal scaling of consumers. Inventory Service can run 6 consumer instances (one per partition). Redis absorbs read load on stock counts.
+
+6. **How do you monitor Kafka consumer lag?** — Analytics Service exposes a `/kafka/consumer-lag` endpoint by querying Kafka's Admin API. Grafana alerts when lag exceeds a threshold.
+
+---
+
+## 14. Estimated Build Timeline
+
+| Phase | Tasks | Duration |
+|---|---|---|
+| Phase 1 | Docker setup, Kafka, API Gateway, Order Service | Week 1–2 |
+| Phase 2 | Inventory + Payment + Shipping services + Saga | Week 3–4 |
+| Phase 3 | React frontend (customer portal + checkout) | Week 5–6 |
+| Phase 4 | Analytics service + Ops dashboard | Week 7 |
+| Phase 5 | Kubernetes deployment + README + ADRs | Week 8 |
+
+**Total estimated time:** 6–8 weeks (part-time), 3–4 weeks (full-time)
+
+---
+
+*Document prepared for portfolio / interview preparation purposes.*
+*Stack: React 18 + Java 17 Spring Boot + Apache Kafka + PostgreSQL + Redis + Docker + Kubernetes*

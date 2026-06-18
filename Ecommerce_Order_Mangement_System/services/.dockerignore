@@ -1,0 +1,7 @@
+# Keep the Docker build context lean — exclude build output and IDE files.
+# (The reactor build context is the whole services/ directory.)
+**/target/
+**/*.iml
+**/.idea/
+**/.vscode/
+**/*.log

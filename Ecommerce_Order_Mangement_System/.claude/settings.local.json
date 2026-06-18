@@ -1,0 +1,8 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(python -c \"import xml.dom.minidom as m; m.parse\\('architecture-diagram.svg'\\); print\\('SVG is valid XML'\\)\")",
+      "Bash(python -c \"import xml.dom.minidom as m; m.parse\\('architecture-diagram.svg'\\); print\\('SVG still valid XML'\\)\")"
+    ]
+  }
+}

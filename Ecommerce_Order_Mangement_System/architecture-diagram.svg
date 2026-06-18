@@ -1,0 +1,329 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="1480" height="1180" viewBox="0 0 1480 1180" font-family="Segoe UI, Arial, sans-serif">
+  <defs>
+    <!-- Arrow markers -->
+    <marker id="arrow" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto" markerUnits="strokeWidth">
+      <path d="M0,0 L8,3 L0,6 Z" fill="#475569"/>
+    </marker>
+    <marker id="arrowKafka" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto" markerUnits="strokeWidth">
+      <path d="M0,0 L8,3 L0,6 Z" fill="#0ea5e9"/>
+    </marker>
+    <marker id="arrowEvent" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto" markerUnits="strokeWidth">
+      <path d="M0,0 L8,3 L0,6 Z" fill="#16a34a"/>
+    </marker>
+    <marker id="arrowComp" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto" markerUnits="strokeWidth">
+      <path d="M0,0 L8,3 L0,6 Z" fill="#dc2626"/>
+    </marker>
+    <filter id="shadow" x="-10%" y="-10%" width="120%" height="130%">
+      <feDropShadow dx="0" dy="2" stdDeviation="2.5" flood-color="#0f172a" flood-opacity="0.18"/>
+    </filter>
+    <style>
+      .band-label { font-size: 15px; font-weight: 700; fill: #64748b; letter-spacing: 1.5px; }
+      .title { font-size: 30px; font-weight: 800; fill: #0f172a; }
+      .subtitle { font-size: 15px; fill: #64748b; }
+      .svc-title { font-size: 16px; font-weight: 700; fill: #0f172a; }
+      .svc-sub { font-size: 11.5px; fill: #475569; }
+      .port { font-size: 11px; font-weight: 700; fill: #ffffff; }
+      .topic { font-size: 13px; font-weight: 700; fill: #ffffff; }
+      .small { font-size: 11px; fill: #475569; }
+      .edge-label { font-size: 11px; font-weight: 600; fill: #334155; }
+      .legend { font-size: 12.5px; fill: #334155; }
+      .db-label { font-size: 12px; font-weight: 700; fill: #ffffff; }
+      .note { font-size: 11.5px; fill: #475569; }
+    </style>
+  </defs>
+
+  <!-- Background -->
+  <rect x="0" y="0" width="1480" height="1180" fill="#f1f5f9"/>
+
+  <!-- Header -->
+  <text x="40" y="50" class="title">OrderFlow — Distributed E-Commerce Order Processing Platform</text>
+  <text x="40" y="76" class="subtitle">React 18 + Spring Boot 3 (Java 17) + Apache Kafka + PostgreSQL + Redis · Saga pattern · Deployed on AWS EC2 via Docker Compose</text>
+  <line x1="40" y1="92" x2="1440" y2="92" stroke="#cbd5e1" stroke-width="2"/>
+
+  <!-- ===================== BAND 1: CLIENT / BROWSER ===================== -->
+  <text x="40" y="128" class="band-label">CLIENT (BROWSER)</text>
+  <rect x="40" y="138" width="1400" height="96" rx="12" fill="#eef2ff" stroke="#c7d2fe" stroke-width="1.5"/>
+
+  <!-- React portals -->
+  <g filter="url(#shadow)">
+    <rect x="120" y="158" width="360" height="58" rx="9" fill="#ffffff" stroke="#6366f1" stroke-width="1.5"/>
+    <text x="300" y="183" text-anchor="middle" class="svc-title">Customer Portal</text>
+    <text x="300" y="202" text-anchor="middle" class="svc-sub">Shop · Cart · Checkout · Order Tracking · History</text>
+  </g>
+  <g filter="url(#shadow)">
+    <rect x="560" y="158" width="360" height="58" rx="9" fill="#ffffff" stroke="#6366f1" stroke-width="1.5"/>
+    <text x="740" y="183" text-anchor="middle" class="svc-title">Operations Dashboard</text>
+    <text x="740" y="202" text-anchor="middle" class="svc-sub">Pipeline · Revenue · Failures · Kafka Lag · Health</text>
+  </g>
+  <g filter="url(#shadow)">
+    <rect x="1000" y="158" width="360" height="58" rx="9" fill="#ffffff" stroke="#6366f1" stroke-width="1.5"/>
+    <text x="1180" y="183" text-anchor="middle" class="svc-title">Inventory Portal</text>
+    <text x="1180" y="202" text-anchor="middle" class="svc-sub">Stock Dashboard · Product / Stock CRUD</text>
+  </g>
+  <text x="1410" y="170" text-anchor="end" class="small">React + TS (Vite)</text>
+  <text x="1410" y="186" text-anchor="end" class="small">Redux Toolkit</text>
+  <text x="1410" y="202" text-anchor="end" class="small">RTK Query</text>
+
+  <!-- Arrow Client -> Gateway -->
+  <line x1="740" y1="234" x2="740" y2="280" stroke="#475569" stroke-width="2.5" marker-end="url(#arrow)"/>
+  <rect x="752" y="246" width="186" height="22" rx="5" fill="#e2e8f0"/>
+  <text x="760" y="261" class="edge-label">HTTPS / REST · JWT Bearer</text>
+
+  <!-- ===================== BAND 2: API GATEWAY ===================== -->
+  <text x="40" y="300" class="band-label">EDGE</text>
+  <g filter="url(#shadow)">
+    <rect x="440" y="288" width="600" height="64" rx="10" fill="#1e293b" stroke="#0f172a" stroke-width="1.5"/>
+    <text x="740" y="316" text-anchor="middle" font-size="17" font-weight="700" fill="#ffffff">API Gateway — Spring Cloud Gateway</text>
+    <text x="740" y="337" text-anchor="middle" font-size="12" fill="#cbd5e1">JWT auth · routing · rate limiting (100 req/min) · request logging</text>
+    <rect x="958" y="300" width="68" height="22" rx="11" fill="#0ea5e9"/>
+    <text x="992" y="315" text-anchor="middle" class="port">:8080</text>
+  </g>
+
+  <!-- Routing arrows Gateway -> services -->
+  <g stroke="#475569" stroke-width="2" fill="none">
+    <path d="M540,352 C540,400 200,395 200,452" marker-end="url(#arrow)"/>
+    <path d="M620,352 C620,405 405,398 405,452" marker-end="url(#arrow)"/>
+    <path d="M710,352 L660,452" marker-end="url(#arrow)"/>
+    <path d="M860,352 C860,405 1075,398 1075,452" marker-end="url(#arrow)"/>
+    <path d="M940,352 C940,400 1280,395 1280,452" marker-end="url(#arrow)"/>
+  </g>
+  <text x="455" y="430" class="edge-label">/api/orders</text>
+  <text x="300" y="430" class="edge-label">/api/inventory</text>
+  <text x="980" y="430" class="edge-label">/api/payments</text>
+  <text x="1120" y="430" class="edge-label">/api/shipping · /api/analytics</text>
+
+  <!-- ===================== BAND 3: MICROSERVICES ===================== -->
+  <text x="40" y="474" class="band-label">MICROSERVICES (Spring Boot · Java 17 · Maven multi-module reactor)</text>
+
+  <!-- Service card helper layout: 6 service cards in a row, notification below gateway center -->
+  <!-- Order Service -->
+  <g filter="url(#shadow)">
+    <rect x="80" y="486" width="240" height="92" rx="10" fill="#ffffff" stroke="#2563eb" stroke-width="2"/>
+    <rect x="80" y="486" width="240" height="26" rx="10" fill="#2563eb"/>
+    <text x="200" y="504" text-anchor="middle" font-size="14" font-weight="700" fill="#ffffff">Order Service</text>
+    <rect x="270" y="490" width="44" height="18" rx="9" fill="#0f172a"/>
+    <text x="292" y="503" text-anchor="middle" class="port">:8081</text>
+    <text x="200" y="532" text-anchor="middle" class="svc-sub">Order lifecycle + status</text>
+    <text x="200" y="549" text-anchor="middle" class="svc-sub">Producer: order-events</text>
+    <text x="200" y="566" text-anchor="middle" class="svc-sub">Consumer: inv + pay events</text>
+  </g>
+
+  <!-- Inventory Service -->
+  <g filter="url(#shadow)">
+    <rect x="340" y="486" width="240" height="92" rx="10" fill="#ffffff" stroke="#0891b2" stroke-width="2"/>
+    <rect x="340" y="486" width="240" height="26" rx="10" fill="#0891b2"/>
+    <text x="460" y="504" text-anchor="middle" font-size="14" font-weight="700" fill="#ffffff">Inventory Service</text>
+    <rect x="530" y="490" width="44" height="18" rx="9" fill="#0f172a"/>
+    <text x="552" y="503" text-anchor="middle" class="port">:8082</text>
+    <text x="460" y="532" text-anchor="middle" class="svc-sub">Reserve stock (optimistic lock)</text>
+    <text x="460" y="549" text-anchor="middle" class="svc-sub">Redis cache (TTL 30s)</text>
+    <text x="460" y="566" text-anchor="middle" class="svc-sub">Saga compensation</text>
+  </g>
+
+  <!-- Payment Service -->
+  <g filter="url(#shadow)">
+    <rect x="600" y="486" width="240" height="92" rx="10" fill="#ffffff" stroke="#7c3aed" stroke-width="2"/>
+    <rect x="600" y="486" width="240" height="26" rx="10" fill="#7c3aed"/>
+    <text x="720" y="504" text-anchor="middle" font-size="14" font-weight="700" fill="#ffffff">Payment Service</text>
+    <rect x="790" y="490" width="44" height="18" rx="9" fill="#0f172a"/>
+    <text x="812" y="503" text-anchor="middle" class="port">:8083</text>
+    <text x="720" y="532" text-anchor="middle" class="svc-sub">Mock gateway (90% success)</text>
+    <text x="720" y="549" text-anchor="middle" class="svc-sub">Consumer: inventory-events</text>
+    <text x="720" y="566" text-anchor="middle" class="svc-sub">Producer: payment-events</text>
+  </g>
+
+  <!-- Shipping Service -->
+  <g filter="url(#shadow)">
+    <rect x="860" y="486" width="240" height="92" rx="10" fill="#ffffff" stroke="#db2777" stroke-width="2"/>
+    <rect x="860" y="486" width="240" height="26" rx="10" fill="#db2777"/>
+    <text x="980" y="504" text-anchor="middle" font-size="14" font-weight="700" fill="#ffffff">Shipping Service</text>
+    <rect x="1050" y="490" width="44" height="18" rx="9" fill="#0f172a"/>
+    <text x="1072" y="503" text-anchor="middle" class="port">:8085</text>
+    <text x="980" y="532" text-anchor="middle" class="svc-sub">Shipment + tracking ID</text>
+    <text x="980" y="549" text-anchor="middle" class="svc-sub">Async delivery simulator</text>
+    <text x="980" y="566" text-anchor="middle" class="svc-sub">Producer: shipping-events</text>
+  </g>
+
+  <!-- Analytics Service -->
+  <g filter="url(#shadow)">
+    <rect x="1120" y="486" width="280" height="92" rx="10" fill="#ffffff" stroke="#ea580c" stroke-width="2"/>
+    <rect x="1120" y="486" width="280" height="26" rx="10" fill="#ea580c"/>
+    <text x="1260" y="504" text-anchor="middle" font-size="14" font-weight="700" fill="#ffffff">Analytics Service</text>
+    <rect x="1350" y="490" width="44" height="18" rx="9" fill="#0f172a"/>
+    <text x="1372" y="503" text-anchor="middle" class="port">:8086</text>
+    <text x="1260" y="532" text-anchor="middle" class="svc-sub">Consumes ALL topics</text>
+    <text x="1260" y="549" text-anchor="middle" class="svc-sub">Metrics + revenue aggregation</text>
+    <text x="1260" y="566" text-anchor="middle" class="svc-sub">Kafka consumer-lag (AdminClient)</text>
+  </g>
+
+  <!-- Notification Service (placed to the left, consumes all) -->
+  <g filter="url(#shadow)">
+    <rect x="80" y="690" width="240" height="78" rx="10" fill="#ffffff" stroke="#0d9488" stroke-width="2"/>
+    <rect x="80" y="690" width="240" height="26" rx="10" fill="#0d9488"/>
+    <text x="200" y="708" text-anchor="middle" font-size="14" font-weight="700" fill="#ffffff">Notification Service</text>
+    <rect x="270" y="694" width="44" height="18" rx="9" fill="#0f172a"/>
+    <text x="292" y="707" text-anchor="middle" class="port">:8084</text>
+    <text x="200" y="736" text-anchor="middle" class="svc-sub">Stateless · async email (mock SMTP)</text>
+    <text x="200" y="753" text-anchor="middle" class="svc-sub">Consumes order/pay/ship/inv events</text>
+  </g>
+
+  <!-- service -> kafka connectors (produce/consume) -->
+  <g stroke="#0ea5e9" stroke-width="2" fill="none" stroke-dasharray="0">
+    <line x1="200" y1="578" x2="200" y2="628" marker-end="url(#arrowKafka)"/>
+    <line x1="460" y1="578" x2="460" y2="628" marker-end="url(#arrowKafka)"/>
+    <line x1="720" y1="578" x2="720" y2="628" marker-end="url(#arrowKafka)"/>
+    <line x1="980" y1="578" x2="980" y2="628" marker-end="url(#arrowKafka)"/>
+    <line x1="1260" y1="578" x2="1260" y2="628" marker-end="url(#arrowKafka)"/>
+  </g>
+  <!-- notification to kafka -->
+  <line x1="320" y1="700" x2="430" y2="678" stroke="#0ea5e9" stroke-width="2" fill="none" marker-end="url(#arrowKafka)"/>
+
+  <!-- ===================== BAND 4: KAFKA EVENT BUS ===================== -->
+  <text x="40" y="616" class="band-label">EVENT BUS — APACHE KAFKA (6 partitions/topic · manual offset commit · idempotent consumers)</text>
+  <g filter="url(#shadow)">
+    <rect x="80" y="628" width="1320" height="56" rx="10" fill="#0c4a6e" stroke="#075985" stroke-width="1.5"/>
+  </g>
+  <!-- Topic chips -->
+  <g>
+    <rect x="110" y="640" width="190" height="32" rx="16" fill="#0ea5e9"/>
+    <text x="205" y="661" text-anchor="middle" class="topic">order-events</text>
+
+    <rect x="330" y="640" width="200" height="32" rx="16" fill="#0ea5e9"/>
+    <text x="430" y="661" text-anchor="middle" class="topic">inventory-events</text>
+
+    <rect x="560" y="640" width="200" height="32" rx="16" fill="#0ea5e9"/>
+    <text x="660" y="661" text-anchor="middle" class="topic">payment-events</text>
+
+    <rect x="790" y="640" width="200" height="32" rx="16" fill="#0ea5e9"/>
+    <text x="890" y="661" text-anchor="middle" class="topic">shipping-events</text>
+
+    <rect x="1020" y="640" width="170" height="32" rx="16" fill="#64748b"/>
+    <text x="1105" y="661" text-anchor="middle" class="topic">dlq-events</text>
+
+    <text x="1230" y="661" class="topic" fill="#bae6fd">+ Zookeeper</text>
+  </g>
+
+  <!-- ===================== BAND 5: DATA STORES ===================== -->
+  <text x="40" y="812" class="band-label">DATA STORES (database-per-service · PostgreSQL 15 · Redis 7)</text>
+  <rect x="40" y="824" width="1400" height="150" rx="12" fill="#ecfdf5" stroke="#a7f3d0" stroke-width="1.5"/>
+
+  <!-- orders_db -->
+  <g filter="url(#shadow)">
+    <rect x="80" y="850" width="180" height="98" rx="9" fill="#ffffff" stroke="#2563eb" stroke-width="1.5"/>
+    <ellipse cx="170" cy="876" rx="44" ry="11" fill="#2563eb"/>
+    <text x="170" y="900" text-anchor="middle" class="db-label" fill="#1e3a8a">orders_db</text>
+    <text x="170" y="920" text-anchor="middle" class="small">orders, order_items</text>
+    <text x="170" y="936" text-anchor="middle" class="small">processed_events</text>
+  </g>
+  <!-- inventory_db -->
+  <g filter="url(#shadow)">
+    <rect x="300" y="850" width="180" height="98" rx="9" fill="#ffffff" stroke="#0891b2" stroke-width="1.5"/>
+    <ellipse cx="390" cy="876" rx="44" ry="11" fill="#0891b2"/>
+    <text x="390" y="900" text-anchor="middle" class="db-label" fill="#155e75">inventory_db</text>
+    <text x="390" y="920" text-anchor="middle" class="small">products, stock</text>
+    <text x="390" y="936" text-anchor="middle" class="small">reservations</text>
+  </g>
+  <!-- payments_db -->
+  <g filter="url(#shadow)">
+    <rect x="520" y="850" width="180" height="98" rx="9" fill="#ffffff" stroke="#7c3aed" stroke-width="1.5"/>
+    <ellipse cx="610" cy="876" rx="44" ry="11" fill="#7c3aed"/>
+    <text x="610" y="900" text-anchor="middle" class="db-label" fill="#5b21b6">payments_db</text>
+    <text x="610" y="920" text-anchor="middle" class="small">transactions</text>
+    <text x="610" y="936" text-anchor="middle" class="small">refunds, retries</text>
+  </g>
+  <!-- shipping_db -->
+  <g filter="url(#shadow)">
+    <rect x="740" y="850" width="180" height="98" rx="9" fill="#ffffff" stroke="#db2777" stroke-width="1.5"/>
+    <ellipse cx="830" cy="876" rx="44" ry="11" fill="#db2777"/>
+    <text x="830" y="900" text-anchor="middle" class="db-label" fill="#9d174d">shipping_db</text>
+    <text x="830" y="920" text-anchor="middle" class="small">shipments</text>
+    <text x="830" y="936" text-anchor="middle" class="small">addresses</text>
+  </g>
+  <!-- analytics_db -->
+  <g filter="url(#shadow)">
+    <rect x="960" y="850" width="180" height="98" rx="9" fill="#ffffff" stroke="#ea580c" stroke-width="1.5"/>
+    <ellipse cx="1050" cy="876" rx="44" ry="11" fill="#ea580c"/>
+    <text x="1050" y="900" text-anchor="middle" class="db-label" fill="#9a3412">analytics_db</text>
+    <text x="1050" y="920" text-anchor="middle" class="small">order_metrics</text>
+    <text x="1050" y="936" text-anchor="middle" class="small">revenue, failures</text>
+  </g>
+  <!-- Redis -->
+  <g filter="url(#shadow)">
+    <rect x="1180" y="850" width="220" height="98" rx="9" fill="#ffffff" stroke="#dc2626" stroke-width="1.5"/>
+    <rect x="1200" y="866" width="180" height="22" rx="6" fill="#dc2626"/>
+    <text x="1290" y="882" text-anchor="middle" class="db-label">Redis 7 (cache)</text>
+    <text x="1290" y="912" text-anchor="middle" class="small">Hot product stock counts</text>
+    <text x="1290" y="930" text-anchor="middle" class="small">used by Inventory Service · TTL 30s</text>
+  </g>
+
+  <!-- Direct DB links from services to their own database (database-per-service) -->
+  <g stroke="#16a34a" stroke-width="1.6" fill="none" stroke-dasharray="5 4">
+    <path d="M150,578 C150,640 150,790 168,848" marker-end="url(#arrowEvent)"/>
+    <path d="M410,578 C410,640 392,790 390,848" marker-end="url(#arrowEvent)"/>
+    <path d="M670,578 C670,640 612,790 610,848" marker-end="url(#arrowEvent)"/>
+    <path d="M930,578 C930,640 832,790 830,848" marker-end="url(#arrowEvent)"/>
+    <path d="M1210,578 C1210,640 1052,790 1050,848" marker-end="url(#arrowEvent)"/>
+  </g>
+  <!-- inventory -> redis cache -->
+  <path d="M560,560 C 820,660 1120,770 1240,848" stroke="#dc2626" stroke-width="1.6" fill="none" stroke-dasharray="5 4" marker-end="url(#arrowComp)"/>
+  <text x="1010" y="806" class="edge-label" fill="#b91c1c">Inventory &#8644; Redis cache</text>
+
+  <!-- ===================== SAGA FLOW STRIP ===================== -->
+  <text x="40" y="1010" class="band-label">SAGA — HAPPY PATH &amp; COMPENSATION</text>
+  <rect x="40" y="1022" width="1400" height="120" rx="12" fill="#ffffff" stroke="#cbd5e1" stroke-width="1.5"/>
+
+  <!-- happy path nodes -->
+  <g>
+    <rect x="70" y="1050" width="150" height="34" rx="17" fill="#dbeafe" stroke="#2563eb"/>
+    <text x="145" y="1072" text-anchor="middle" font-size="12.5" font-weight="700" fill="#1e3a8a">1. PLACED</text>
+
+    <rect x="280" y="1050" width="170" height="34" rx="17" fill="#cffafe" stroke="#0891b2"/>
+    <text x="365" y="1072" text-anchor="middle" font-size="12.5" font-weight="700" fill="#155e75">2. CONFIRMED</text>
+
+    <rect x="510" y="1050" width="190" height="34" rx="17" fill="#ede9fe" stroke="#7c3aed"/>
+    <text x="605" y="1072" text-anchor="middle" font-size="12.5" font-weight="700" fill="#5b21b6">3. PAYMENT SUCCESS</text>
+
+    <rect x="760" y="1050" width="150" height="34" rx="17" fill="#fce7f3" stroke="#db2777"/>
+    <text x="835" y="1072" text-anchor="middle" font-size="12.5" font-weight="700" fill="#9d174d">4. SHIPPED</text>
+
+    <rect x="970" y="1050" width="150" height="34" rx="17" fill="#dcfce7" stroke="#16a34a"/>
+    <text x="1045" y="1072" text-anchor="middle" font-size="12.5" font-weight="700" fill="#166534">5. DELIVERED</text>
+  </g>
+  <g stroke="#16a34a" stroke-width="2.5" fill="none">
+    <line x1="220" y1="1067" x2="278" y2="1067" marker-end="url(#arrowEvent)"/>
+    <line x1="450" y1="1067" x2="508" y2="1067" marker-end="url(#arrowEvent)"/>
+    <line x1="700" y1="1067" x2="758" y2="1067" marker-end="url(#arrowEvent)"/>
+    <line x1="910" y1="1067" x2="968" y2="1067" marker-end="url(#arrowEvent)"/>
+  </g>
+
+  <!-- compensation -->
+  <g>
+    <rect x="1170" y="1038" width="240" height="28" rx="14" fill="#fee2e2" stroke="#dc2626"/>
+    <text x="1290" y="1057" text-anchor="middle" font-size="11.5" font-weight="700" fill="#991b1b">payment.failed → release stock</text>
+    <rect x="1170" y="1074" width="240" height="28" rx="14" fill="#fef9c3" stroke="#ca8a04"/>
+    <text x="1290" y="1093" text-anchor="middle" font-size="11.5" font-weight="700" fill="#854d0e">inventory.insufficient → CANCELLED</text>
+  </g>
+  <path d="M605,1084 C 605,1115 1100,1115 1168,1090" stroke="#dc2626" stroke-width="2" fill="none" stroke-dasharray="6 4" marker-end="url(#arrowComp)"/>
+  <text x="720" y="1132" class="note" fill="#b91c1c">Compensating transactions reverse partial work without 2-phase commit · idempotency keys prevent duplicate processing</text>
+
+  <!-- ===================== LEGEND ===================== -->
+  <g>
+    <rect x="1120" y="118" width="320" height="14" fill="none"/>
+  </g>
+  <g transform="translate(40,1150)">
+    <line x1="0" y1="-4" x2="28" y2="-4" stroke="#475569" stroke-width="2.5" marker-end="url(#arrow)"/>
+    <text x="34" y="0" class="legend">REST (sync)</text>
+
+    <line x1="150" y1="-4" x2="178" y2="-4" stroke="#0ea5e9" stroke-width="2.5" marker-end="url(#arrowKafka)"/>
+    <text x="184" y="0" class="legend">Kafka publish/subscribe (async)</text>
+
+    <line x1="430" y1="-4" x2="458" y2="-4" stroke="#16a34a" stroke-width="2.5" stroke-dasharray="5 4" marker-end="url(#arrowEvent)"/>
+    <text x="464" y="0" class="legend">DB read/write &amp; saga progress</text>
+
+    <line x1="720" y1="-4" x2="748" y2="-4" stroke="#dc2626" stroke-width="2.5" stroke-dasharray="6 4" marker-end="url(#arrowComp)"/>
+    <text x="754" y="0" class="legend">Compensation / cache</text>
+
+    <text x="980" y="0" class="legend" fill="#64748b">All 13 containers run on one AWS EC2 instance via Docker Compose · Frontend :3000 · Gateway :8080</text>
+  </g>
+</svg>
