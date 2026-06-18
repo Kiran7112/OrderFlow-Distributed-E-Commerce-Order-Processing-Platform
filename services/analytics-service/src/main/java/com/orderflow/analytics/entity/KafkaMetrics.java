@@ -32,7 +32,7 @@ public class KafkaMetrics {
     @Column
     private Long lag;
 
-    @Column
+    @Column(name = "consumer_offset")
     private Long offset;
 
     @Column

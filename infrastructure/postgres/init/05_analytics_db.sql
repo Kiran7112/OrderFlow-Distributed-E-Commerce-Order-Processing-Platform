@@ -85,7 +85,7 @@ CREATE TABLE kafka_metrics (
     consumer_group VARCHAR(100) NOT NULL,
     topic VARCHAR(100) NOT NULL,
     lag BIGINT,
-    offset BIGINT,
+    consumer_offset BIGINT,
     log_end_offset BIGINT,
     measured_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     CONSTRAINT unique_kafka_metric UNIQUE(consumer_group, topic, measured_at)
