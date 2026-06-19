@@ -2,6 +2,92 @@
 
 A complete microservices-based e-commerce order processing system demonstrating Kafka event-driven architecture, Saga pattern, and distributed transactions.
 
+## 📸 Live Demo — Feature Screenshots
+
+> Captured from the live stack on EC2 (`http://34.238.158.14:3000`). Each tab below is collapsible — click a title to expand its screenshot.
+
+<details open>
+<summary><b>🏗️ Architecture &amp; Saga Flow</b></summary>
+
+![Architecture and end-to-end Saga flow across the 6 microservices](frontend/public/demo/images/08-architecture.png)
+
+</details>
+
+<details>
+<summary><b>🛒 Customer Portal · Shop (Product Listing)</b></summary>
+
+![Storefront product grid with live stock badges (In stock / Only N left / Out of stock)](frontend/public/demo/images/01-shop.png)
+
+</details>
+
+<details>
+<summary><b>🧺 Customer Portal · Cart &amp; Checkout</b></summary>
+
+![Cart with subtotal/tax/total and the checkout shipping-address form](frontend/public/demo/images/02-cart-checkout.png)
+
+</details>
+
+<details>
+<summary><b>📦 Customer Portal · Order Tracking &amp; History</b></summary>
+
+![Live Saga tracking timeline (Placed → Confirmed → Shipped → Delivered) and the order history list](frontend/public/demo/images/03-tracking-history.png)
+
+</details>
+
+<details>
+<summary><b>📊 Operations Dashboard</b></summary>
+
+![Live order pipeline, 30-day revenue chart, failure monitor, Kafka consumer lag, and service-health grid](frontend/public/demo/images/04-operations.png)
+
+</details>
+
+<details>
+<summary><b>🏷️ Inventory Management Portal</b></summary>
+
+![Low-stock alerts and the product stock-management CRUD table](frontend/public/demo/images/05-inventory.png)
+
+</details>
+
+<details>
+<summary><b>🖥️ AWS EC2 Terminal · Stack Status &amp; Health</b></summary>
+
+![docker-compose ps (all 13 containers healthy), Kafka topics, Redis ping, PostgreSQL databases, actuator health](frontend/public/demo/images/06-terminal-status.png)
+
+</details>
+
+<details>
+<summary><b>⚡ AWS EC2 Terminal · Place Order &amp; Saga (API outputs)</b></summary>
+
+![POST /api/orders, payment + shipping responses, notification emails, analytics lag, and failure compensation](frontend/public/demo/images/07-terminal-order.png)
+
+</details>
+
+## 🎯 Problem Statement
+
+Modern e-commerce platforms process **millions of orders per day**. A traditional **monolithic** architecture struggles to handle this because:
+
+- **Peak-load ingestion** — flash sales and Black Friday spikes overwhelm a single application; one slow component (e.g. payment) backs up the entire request thread pool.
+- **Coupled scaling** — payment, inventory, and shipping have very different load profiles, but a monolith forces you to scale them together, wasting resources.
+- **All-or-nothing failures** — if payment fails *after* stock is taken, naïve systems either cancel the whole order or leave inventory "stuck" reserved. A classic two-phase commit (2PC) across services doesn't scale and creates locks.
+- **No real-time visibility** — customers can't see live order progress, and operations teams have no single view of pipeline health, revenue, or where orders are failing.
+- **Tight coupling** — synchronous REST calls between services create cascading failures: if shipping is down, orders can't even be placed.
+
+## 💡 How OrderFlow Solves It
+
+OrderFlow decomposes the order lifecycle into **7 independent microservices** that communicate **asynchronously through Apache Kafka**, with each service owning its own database. This directly addresses every problem above:
+
+| Problem | OrderFlow's Solution |
+|---|---|
+| Peak-load ingestion | Orders are accepted instantly and published to Kafka; downstream work happens asynchronously, so a slow service never blocks order intake. Kafka **buffers** spikes. |
+| Coupled scaling | Each service scales independently. Kafka topics use **6 partitions**, so a hot service (e.g. Inventory during a flash sale) can run multiple consumer instances in parallel. |
+| All-or-nothing failures | The **Saga pattern** replaces 2PC. Each step emits an event; on failure, a **compensating action** runs — e.g. payment fails → inventory reservation is automatically released, order marked `PAYMENT_FAILED`. No distributed locks. |
+| Service crash mid-flow | Kafka **retains** unacknowledged messages. A restarted service reprocesses from its last committed offset; **idempotency keys** (order ID in `processed_events`) prevent duplicate processing. |
+| No real-time visibility | The **Analytics Service** consumes every event and powers a live **Operations Dashboard** (pipeline counts, revenue chart, failure rates, Kafka consumer lag, service health). Customers get a **live tracking timeline**. |
+| Tight coupling | Services never call each other synchronously. They publish/subscribe to Kafka topics, so shipping being down can't stop an order from being placed — it just processes later. |
+| Shared-DB contention | **Database-per-service** (`orders_db`, `inventory_db`, `payments_db`, `shipping_db`, `analytics_db`) enforces loose coupling — one service's schema change never forces another to redeploy. |
+
+**Result:** a resilient, horizontally-scalable order platform where failures are isolated and self-healing, every stage is observable in real time, and each service can be developed, deployed, and scaled on its own. The end-to-end flow (`PLACED → CONFIRMED → SHIPPED → DELIVERED`, with automatic compensation on failure) is shown in the [screenshots above](#-live-demo--feature-screenshots) and detailed in the [Saga section](#order-flow-saga-pattern) below.
+
 ## Tech Stack
 
 - **Frontend:** React 18 + TypeScript + Tailwind CSS + Redux

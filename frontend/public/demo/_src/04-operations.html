@@ -1,0 +1,68 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><link rel="stylesheet" href="style.css"></head>
+<body><div class="wrap"><div class="maxw"><div class="frame">
+  <div class="bar"><span class="cdot" style="background:#ff5f56"></span><span class="cdot" style="background:#ffbd2e"></span><span class="cdot" style="background:#27c93f"></span><span class="url">http://34.238.158.14:3000/ops</span></div>
+  <div class="screen space">
+    <h1 class="title" style="margin:0">Operations Dashboard</h1>
+    <!-- pipeline -->
+    <div class="card">
+      <h2 class="h">Live Order Pipeline (24h)</h2>
+      <div class="grid g5">
+        <div class="text-center"><div class="pipe bg-blue">142</div><p class="text-sm text-gray mt2">Placed</p></div>
+        <div class="text-center"><div class="pipe bg-indigo">128</div><p class="text-sm text-gray mt2">Confirmed</p></div>
+        <div class="text-center"><div class="pipe bg-purple">119</div><p class="text-sm text-gray mt2">Shipped</p></div>
+        <div class="text-center"><div class="pipe bg-green">112</div><p class="text-sm text-gray mt2">Delivered</p></div>
+        <div class="text-center"><div class="pipe bg-red">14</div><p class="text-sm text-gray mt2">Cancelled</p></div>
+      </div>
+    </div>
+    <div class="grid g2">
+      <!-- revenue -->
+      <div class="card">
+        <h2 class="h">Revenue (Last 30 Days)</h2>
+        <svg viewBox="0 0 500 240" style="width:100%;height:240px">
+          <g stroke="#e5e7eb" stroke-dasharray="3 3"><line x1="40" y1="20" x2="490" y2="20"/><line x1="40" y1="70" x2="490" y2="70"/><line x1="40" y1="120" x2="490" y2="120"/><line x1="40" y1="170" x2="490" y2="170"/><line x1="40" y1="210" x2="490" y2="210"/></g>
+          <g fill="#9ca3af" font-size="10" font-family="monospace"><text x="2" y="24">8k</text><text x="2" y="74">6k</text><text x="2" y="124">4k</text><text x="2" y="174">2k</text><text x="2" y="214">0</text><text x="40" y="228">Jun 1</text><text x="200" y="228">Jun 10</text><text x="350" y="228">Jun 19</text></g>
+          <polyline fill="#009dd0" opacity="0.08" points="40,180 75,165 110,170 145,150 180,140 215,120 250,128 285,100 320,90 355,72 390,80 425,55 460,48 485,40 485,210 40,210"/>
+          <polyline fill="none" stroke="#009dd0" stroke-width="2" points="40,180 75,165 110,170 145,150 180,140 215,120 250,128 285,100 320,90 355,72 390,80 425,55 460,48 485,40"/>
+          <g fill="#009dd0"><circle cx="285" cy="100" r="3"/><circle cx="355" cy="72" r="3"/><circle cx="425" cy="55" r="3"/><circle cx="485" cy="40" r="3"/></g>
+        </svg>
+      </div>
+      <!-- failures -->
+      <div class="card">
+        <h2 class="h">Failure Rate Monitor</h2>
+        <div class="grid g3">
+          <div class="bordered"><div class="text-3xl font-bold text-gray9">3</div><p class="text-xs text-gray mt2">Total Failures (24h)</p></div>
+          <div class="bordered"><div class="text-3xl font-bold text-danger">2</div><p class="text-xs text-gray mt2">Payment Failures</p></div>
+          <div class="bordered"><div class="text-3xl font-bold text-warning">1</div><p class="text-xs text-gray mt2">Inventory Shortages</p></div>
+        </div>
+      </div>
+    </div>
+    <div class="grid g2">
+      <!-- kafka lag -->
+      <div class="card">
+        <h2 class="h">Kafka Consumer Lag</h2>
+        <div class="mt2" style="margin-bottom:12px"><span class="text-sm text-gray">Total Lag: </span><span class="font-bold text-success">0</span></div>
+        <table>
+          <thead><tr><th>Topic-Partition</th><th class="r">Lag</th></tr></thead>
+          <tbody>
+            <tr><td>order-events-0</td><td class="r">0</td></tr>
+            <tr><td>inventory-events-0</td><td class="r">0</td></tr>
+            <tr><td>payment-events-0</td><td class="r">0</td></tr>
+            <tr><td>shipping-events-0</td><td class="r">0</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <!-- health -->
+      <div class="card">
+        <h2 class="h">Service Health</h2>
+        <div class="grid g3">
+          <div class="hd"><span class="hdot up"></span><span class="text-sm">API Gateway</span></div>
+          <div class="hd"><span class="hdot up"></span><span class="text-sm">Order Service</span></div>
+          <div class="hd"><span class="hdot up"></span><span class="text-sm">Inventory Service</span></div>
+          <div class="hd"><span class="hdot up"></span><span class="text-sm">Payment Service</span></div>
+          <div class="hd"><span class="hdot up"></span><span class="text-sm">Shipping Service</span></div>
+          <div class="hd"><span class="hdot up"></span><span class="text-sm">Analytics Service</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div></div></div></body></html>

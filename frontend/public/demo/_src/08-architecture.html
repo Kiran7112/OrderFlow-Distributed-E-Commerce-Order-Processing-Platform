@@ -1,0 +1,38 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><link rel="stylesheet" href="style.css"></head>
+<body><div class="wrap"><div class="maxw">
+  <div class="frame">
+    <div class="bar"><span class="cdot" style="background:#ff5f56"></span><span class="cdot" style="background:#ffbd2e"></span><span class="cdot" style="background:#27c93f"></span><span class="url">OrderFlow — Event-Driven Saga Architecture</span></div>
+    <div class="term"><pre><span class="m">Customer</span> ─▶ <span class="c">API Gateway :8080</span> ─▶ <span class="c">Order Service :8081</span>  ──publish──▶ <span class="y">order-events</span>
+                                                  │
+        ┌─────────────────────────────────────────┘
+        ▼
+   <span class="c">Inventory :8082</span>   reserve stock   ──▶ <span class="y">inventory-events</span>
+        ▼
+   <span class="c">Payment :8083</span>     charge card     ──▶ <span class="y">payment-events</span>   (success / failed)
+        ▼
+   <span class="c">Shipping :8085</span>    create shipment ──▶ <span class="y">shipping-events</span>
+        ▼
+   <span class="c">Notification :8084</span>  consumes ALL events ─▶ email (console)
+   <span class="c">Analytics :8086</span>     consumes ALL events ─▶ metrics / Kafka lag
+
+  <span class="r">COMPENSATION</span>:  inventory fail → order CANCELLED
+                 payment fail   → stock released, order PAYMENT_FAILED</pre></div>
+  </div>
+
+  <div style="margin-top:24px" class="grid g3">
+    <div class="card"><div class="text-xs text-gray">FRONTEND</div><div class="font-bold text-primary">React 18 + TypeScript</div><div class="text-sm text-gray mt2">3 portals · Redux Toolkit · Vite · Tailwind</div></div>
+    <div class="card"><div class="text-xs text-gray">BACKEND</div><div class="font-bold text-primary">Java 17 · Spring Boot 3</div><div class="text-sm text-gray mt2">6 microservices · Maven reactor</div></div>
+    <div class="card"><div class="text-xs text-gray">INFRA</div><div class="font-bold text-primary">Kafka · PostgreSQL ×5 · Redis</div><div class="text-sm text-gray mt2">13 containers · Docker Compose · EC2</div></div>
+  </div>
+
+  <div style="margin-top:24px" class="card">
+    <h2 class="h">End-to-End Saga — status transitions</h2>
+    <div class="divide">
+      <div class="flex gap4 items-center" style="padding:12px 0"><span class="badge b-blue">1 · PLACED</span><span class="text-sm">Order Service persists order &amp; publishes <span class="font-mono text-primary">order.placed</span></span></div>
+      <div class="flex gap4 items-center" style="padding:12px 0"><span class="badge b-indigo">2 · CONFIRMED</span><span class="text-sm">Inventory reserves stock (optimistic lock + Redis) → <span class="font-mono text-primary">inventory.reserved</span></span></div>
+      <div class="flex gap4 items-center" style="padding:12px 0"><span class="badge b-yellow">3 · PAYMENT</span><span class="text-sm">Payment charges via mock gateway → <span class="font-mono text-primary">payment.success / failed</span></span></div>
+      <div class="flex gap4 items-center" style="padding:12px 0"><span class="badge b-purple">4 · SHIPPED</span><span class="text-sm">Shipping creates shipment + tracking → <span class="font-mono text-primary">shipment.created</span></span></div>
+      <div class="flex gap4 items-center" style="padding:12px 0"><span class="badge b-green">5 · DELIVERED</span><span class="text-sm">Notification emails customer · Analytics aggregates metrics</span></div>
+    </div>
+  </div>
+</div></div></body></html>

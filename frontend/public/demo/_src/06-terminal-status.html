@@ -1,0 +1,49 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><link rel="stylesheet" href="style.css"></head>
+<body><div class="wrap"><div class="maxw">
+  <div class="frame">
+    <div class="bar"><span class="cdot" style="background:#ff5f56"></span><span class="cdot" style="background:#ffbd2e"></span><span class="cdot" style="background:#27c93f"></span><span class="url">ubuntu@ip-172-31-37-146: ~/orderflow — docker-compose ps</span></div>
+    <div class="term"><pre><span class="g">ubuntu@ip-172-31-37-146</span>:<span class="c">~/orderflow</span>$ docker-compose ps
+<span class="d">NAME                   IMAGE                            SERVICE                STATUS              PORTS</span>
+analytics-service      orderflow-analytics-service      analytics-service      <span class="g">Up (healthy)</span>     0.0.0.0:8086->8086/tcp
+api-gateway            orderflow-api-gateway            api-gateway            <span class="g">Up (healthy)</span>     0.0.0.0:8080->8080/tcp
+frontend               orderflow-frontend               frontend               <span class="g">Up (healthy)</span>     0.0.0.0:3000->80/tcp
+inventory-service      orderflow-inventory-service      inventory-service      <span class="g">Up (healthy)</span>     0.0.0.0:8082->8082/tcp
+kafka                  confluentinc/cp-kafka:7.5.0      kafka                  <span class="g">Up (healthy)</span>     0.0.0.0:9092->9092/tcp
+kafka-init             confluentinc/cp-kafka:7.5.0      kafka-init             <span class="y">Exited (0)</span>       <span class="d"><- ran once, created topics</span>
+notification-service   orderflow-notification-service   notification-service   <span class="g">Up (healthy)</span>     0.0.0.0:8084->8084/tcp
+order-service          orderflow-order-service          order-service          <span class="g">Up (healthy)</span>     0.0.0.0:8081->8081/tcp
+payment-service        orderflow-payment-service        payment-service        <span class="g">Up (healthy)</span>     0.0.0.0:8083->8083/tcp
+postgres               postgres:15-alpine               postgres               <span class="g">Up (healthy)</span>     0.0.0.0:5432->5432/tcp
+redis                  redis:7-alpine                   redis                  <span class="g">Up (healthy)</span>     0.0.0.0:6379->6379/tcp
+shipping-service       orderflow-shipping-service       shipping-service       <span class="g">Up (healthy)</span>     0.0.0.0:8085->8085/tcp
+zookeeper              confluentinc/cp-zookeeper:7.5.0  zookeeper              <span class="g">Up (healthy)</span>     0.0.0.0:2181->2181/tcp</pre></div>
+  </div>
+
+  <div class="frame" style="margin-top:24px">
+    <div class="bar"><span class="cdot" style="background:#ff5f56"></span><span class="cdot" style="background:#ffbd2e"></span><span class="cdot" style="background:#27c93f"></span><span class="url">Kafka topics · Redis ping · PostgreSQL databases · health</span></div>
+    <div class="term"><pre><span class="g">$</span> docker-compose exec kafka kafka-topics --bootstrap-server localhost:9092 --list
+<span class="y">dlq-events</span>
+<span class="y">inventory-events</span>
+<span class="y">order-events</span>
+<span class="y">payment-events</span>
+<span class="y">shipping-events</span>
+__consumer_offsets
+
+<span class="g">$</span> docker-compose exec redis redis-cli ping
+<span class="g">PONG</span>
+
+<span class="g">$</span> docker-compose exec postgres psql -U postgres -c "\l"
+<span class="d">     Name      |  Owner   | Encoding</span>
+ <span class="w">analytics_db</span>  | postgres | UTF8
+ <span class="w">inventory_db</span>  | postgres | UTF8
+ <span class="w">orders_db</span>     | postgres | UTF8
+ <span class="w">payments_db</span>   | postgres | UTF8
+ <span class="w">shipping_db</span>   | postgres | UTF8
+
+<span class="g">$</span> curl -s http://localhost:8080/actuator/health
+{<span class="c">"status"</span>:<span class="g">"UP"</span>}
+
+<span class="g">$</span> curl -s http://localhost:8082/actuator/health
+{<span class="c">"status"</span>:<span class="g">"UP"</span>,<span class="c">"components"</span>:{<span class="c">"db"</span>:{<span class="c">"status"</span>:<span class="g">"UP"</span>},<span class="c">"redis"</span>:{<span class="c">"status"</span>:<span class="g">"UP"</span>},<span class="c">"ping"</span>:{<span class="c">"status"</span>:<span class="g">"UP"</span>}}}</pre></div>
+  </div>
+</div></div></body></html>

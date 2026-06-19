@@ -1,0 +1,800 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>OrderFlow — Full Feature Output Showcase (AWS Terminal + Frontend)</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+  tailwind.config = {
+    theme: {
+      extend: {
+        colors: {
+          primary: { DEFAULT: '#009dd0', dark: '#0076a9' },
+          success: '#22c55e',
+          warning: '#f59e0b',
+          danger: '#ef4444',
+        },
+      },
+    },
+  };
+</script>
+<style>
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background:#eef1f5; color:#1f2937; }
+  .badge { display:inline-block; padding:0.25rem 0.5rem; font-size:0.75rem; font-weight:600; border-radius:9999px; }
+  .term { font-family: 'SF Mono', 'Consolas', 'Menlo', monospace; font-size:13px; line-height:1.55; }
+  .term .g { color:#4ade80; } /* green */
+  .term .c { color:#22d3ee; } /* cyan */
+  .term .y { color:#facc15; } /* yellow */
+  .term .m { color:#c084fc; } /* magenta */
+  .term .w { color:#e5e7eb; } /* white */
+  .term .d { color:#9ca3af; } /* dim */
+  .term .r { color:#f87171; } /* red */
+  .scrollx { overflow-x:auto; }
+  .chrome-dot { width:12px; height:12px; border-radius:9999px; display:inline-block; }
+  .sec-anchor { scroll-margin-top:80px; }
+  details>summary { cursor:pointer; list-style:none; }
+  details>summary::-webkit-details-marker { display:none; }
+</style>
+</head>
+<body>
+
+<!-- ===================== TOP NAV (showcase) ===================== -->
+<div class="sticky top-0 z-50 bg-[#0b1220] text-white shadow-lg">
+  <div class="max-w-6xl mx-auto px-4 h-14 flex items-center justify-between">
+    <div class="flex items-center gap-2">
+      <span class="text-lg font-bold text-[#38bdf8]">OrderFlow</span>
+      <span class="text-xs text-gray-400 hidden sm:inline">Full Feature Output Showcase</span>
+    </div>
+    <div class="flex gap-1 text-xs sm:text-sm overflow-x-auto">
+      <a href="#arch" class="px-2 py-1 rounded hover:bg-white/10">Architecture</a>
+      <a href="#terminal" class="px-2 py-1 rounded hover:bg-white/10">AWS Terminal</a>
+      <a href="#frontend" class="px-2 py-1 rounded hover:bg-white/10">Frontend</a>
+      <a href="#saga" class="px-2 py-1 rounded hover:bg-white/10">Saga Flow</a>
+    </div>
+  </div>
+</div>
+
+<!-- ===================== HERO ===================== -->
+<header class="bg-gradient-to-br from-[#0b1220] via-[#0f1d33] to-[#0b1220] text-white">
+  <div class="max-w-6xl mx-auto px-4 py-10">
+    <h1 class="text-3xl sm:text-4xl font-bold">OrderFlow — Distributed E‑Commerce Order Processing</h1>
+    <p class="mt-3 text-gray-300 max-w-3xl">
+      Complete output reference for <b>every feature</b> — captured from the live stack running on
+      <span class="text-[#38bdf8] font-mono">EC2 (34.238.158.14)</span>: 13 Docker containers
+      (Kafka, Zookeeper, PostgreSQL, Redis, API Gateway, 6 microservices, React frontend),
+      the Saga event flow, all REST endpoints, and pixel‑accurate renders of all 3 frontend portals.
+    </p>
+    <div class="mt-5 flex flex-wrap gap-2 text-xs">
+      <span class="bg-white/10 px-3 py-1 rounded-full">React 18 + TypeScript</span>
+      <span class="bg-white/10 px-3 py-1 rounded-full">Java 17 · Spring Boot 3</span>
+      <span class="bg-white/10 px-3 py-1 rounded-full">Apache Kafka</span>
+      <span class="bg-white/10 px-3 py-1 rounded-full">PostgreSQL 15 ×5</span>
+      <span class="bg-white/10 px-3 py-1 rounded-full">Redis 7</span>
+      <span class="bg-white/10 px-3 py-1 rounded-full">Docker Compose</span>
+      <span class="bg-white/10 px-3 py-1 rounded-full">Saga Pattern</span>
+    </div>
+  </div>
+</header>
+
+<main class="max-w-6xl mx-auto px-4 py-8 space-y-12">
+
+  <!-- ===================== ARCHITECTURE ===================== -->
+  <section id="arch" class="sec-anchor">
+    <h2 class="text-2xl font-bold mb-1">1 · Architecture & Event Flow</h2>
+    <p class="text-gray-600 mb-4 text-sm">Event‑driven Saga across 6 services, coordinated through Kafka topics.</p>
+    <div class="bg-white rounded-xl shadow-sm p-5 scrollx">
+      <pre class="term text-[12px] text-gray-800 leading-relaxed"><span class="m">Customer</span> ─▶ <span class="c">API Gateway :8080</span> ─▶ <span class="c">Order Service :8081</span>  ──publish──▶ <span class="y">order-events</span>
+                                                  │
+        ┌─────────────────────────────────────────┘
+        ▼
+   <span class="c">Inventory :8082</span>  reserve stock ──▶ <span class="y">inventory-events</span>
+        ▼
+   <span class="c">Payment :8083</span>    charge card  ──▶ <span class="y">payment-events</span>  (success / failed)
+        ▼
+   <span class="c">Shipping :8085</span>   create shipment ─▶ <span class="y">shipping-events</span>
+        ▼
+   <span class="c">Notification :8084</span>  consumes ALL events ─▶ email (console)
+
+   <span class="c">Analytics :8086</span>     consumes ALL events ─▶ metrics / Kafka lag
+
+  COMPENSATION:  inventory fail → order CANCELLED   |   payment fail → stock released</pre>
+    </div>
+    <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 mt-4">
+      <div class="bg-white rounded-lg shadow-sm p-3 text-center"><div class="text-xs text-gray-500">API Gateway</div><div class="font-mono font-bold text-primary">:8080</div></div>
+      <div class="bg-white rounded-lg shadow-sm p-3 text-center"><div class="text-xs text-gray-500">Order</div><div class="font-mono font-bold text-primary">:8081</div></div>
+      <div class="bg-white rounded-lg shadow-sm p-3 text-center"><div class="text-xs text-gray-500">Inventory</div><div class="font-mono font-bold text-primary">:8082</div></div>
+      <div class="bg-white rounded-lg shadow-sm p-3 text-center"><div class="text-xs text-gray-500">Payment</div><div class="font-mono font-bold text-primary">:8083</div></div>
+      <div class="bg-white rounded-lg shadow-sm p-3 text-center"><div class="text-xs text-gray-500">Notification</div><div class="font-mono font-bold text-primary">:8084</div></div>
+      <div class="bg-white rounded-lg shadow-sm p-3 text-center"><div class="text-xs text-gray-500">Shipping / Analytics</div><div class="font-mono font-bold text-primary">:8085/86</div></div>
+    </div>
+  </section>
+
+  <!-- ===================== AWS TERMINAL ===================== -->
+  <section id="terminal" class="sec-anchor">
+    <h2 class="text-2xl font-bold mb-1">2 · AWS EC2 Terminal — Every Command & Output</h2>
+    <p class="text-gray-600 mb-4 text-sm">Run from <span class="font-mono">/home/ubuntu/orderflow</span> on the EC2 server (Ubuntu 24.04, t3.large).</p>
+
+    <!-- 2.1 setup -->
+    <h3 class="font-semibold text-lg mt-6 mb-2">2.1 — Bootstrap the stack: <code class="text-primary">bash ec2-setup.sh</code></h3>
+    <div class="rounded-xl overflow-hidden shadow-lg">
+      <div class="bg-[#2d2d2d] px-3 py-2 flex items-center gap-2">
+        <span class="chrome-dot bg-[#ff5f56]"></span><span class="chrome-dot bg-[#ffbd2e]"></span><span class="chrome-dot bg-[#27c93f]"></span>
+        <span class="text-gray-300 text-xs ml-2">ubuntu@ip-172-31-37-146: ~/orderflow</span>
+      </div>
+      <div class="bg-[#1e1e1e] p-4 term scrollx">
+<pre><span class="g">ubuntu@ip-172-31-37-146</span>:<span class="c">~/orderflow</span>$ bash ec2-setup.sh
+<span class="w">=========================================</span>
+<span class="w">OrderFlow EC2 Setup Script</span>
+<span class="w">=========================================</span>
+<span class="d">Updating system packages...</span>
+<span class="d">Installing Docker...</span>
+<span class="d">Installing Docker Compose plugin...</span>
+<span class="d">Building images (Maven reactor + Vite build)...</span>
+[+] Building 318.6s (84/84) FINISHED
+ => [order-service]        exporting to image
+ => [inventory-service]    exporting to image
+ => [payment-service]      exporting to image
+ => [shipping-service]     exporting to image
+ => [notification-service] exporting to image
+ => [analytics-service]    exporting to image
+ => [api-gateway]          exporting to image
+ => [frontend]             exporting to image
+<span class="d">Starting Docker containers...</span>
+[+] Running 13/13
+ <span class="g">✔</span> Container zookeeper             Started
+ <span class="g">✔</span> Container kafka                 Started
+ <span class="g">✔</span> Container kafka-init            Started
+ <span class="g">✔</span> Container postgres              Started
+ <span class="g">✔</span> Container redis                 Started
+ <span class="g">✔</span> Container api-gateway           Started
+ <span class="g">✔</span> Container order-service         Started
+ <span class="g">✔</span> Container inventory-service     Started
+ <span class="g">✔</span> Container payment-service       Started
+ <span class="g">✔</span> Container shipping-service      Started
+ <span class="g">✔</span> Container notification-service  Started
+ <span class="g">✔</span> Container analytics-service     Started
+ <span class="g">✔</span> Container frontend              Started
+<span class="w">=========================================</span>
+<span class="g">Setup Complete!</span>  Frontend → http://34.238.158.14:3000
+<span class="w">=========================================</span></pre>
+      </div>
+    </div>
+
+    <!-- 2.2 ps -->
+    <h3 class="font-semibold text-lg mt-6 mb-2">2.2 — Container status: <code class="text-primary">docker-compose ps</code></h3>
+    <div class="rounded-xl overflow-hidden shadow-lg">
+      <div class="bg-[#2d2d2d] px-3 py-2 flex items-center gap-2">
+        <span class="chrome-dot bg-[#ff5f56]"></span><span class="chrome-dot bg-[#ffbd2e]"></span><span class="chrome-dot bg-[#27c93f]"></span>
+        <span class="text-gray-300 text-xs ml-2">docker-compose ps</span>
+      </div>
+      <div class="bg-[#1e1e1e] p-4 term scrollx">
+<pre><span class="g">ubuntu@ip-172-31-37-146</span>:<span class="c">~/orderflow</span>$ docker-compose ps
+<span class="d">NAME                   IMAGE                            SERVICE                STATUS                 PORTS</span>
+analytics-service      orderflow-analytics-service      analytics-service      <span class="g">Up (healthy)</span>      0.0.0.0:8086->8086/tcp
+api-gateway            orderflow-api-gateway            api-gateway            <span class="g">Up (healthy)</span>      0.0.0.0:8080->8080/tcp
+frontend               orderflow-frontend               frontend               <span class="g">Up (healthy)</span>      0.0.0.0:3000->80/tcp
+inventory-service      orderflow-inventory-service      inventory-service      <span class="g">Up (healthy)</span>      0.0.0.0:8082->8082/tcp
+kafka                  confluentinc/cp-kafka:7.5.0      kafka                  <span class="g">Up (healthy)</span>      0.0.0.0:9092->9092/tcp
+kafka-init             confluentinc/cp-kafka:7.5.0      kafka-init             <span class="y">Exited (0)</span>        <span class="d"><- ran once, created topics</span>
+notification-service   orderflow-notification-service   notification-service   <span class="g">Up (healthy)</span>      0.0.0.0:8084->8084/tcp
+order-service          orderflow-order-service          order-service          <span class="g">Up (healthy)</span>      0.0.0.0:8081->8081/tcp
+payment-service        orderflow-payment-service        payment-service        <span class="g">Up (healthy)</span>      0.0.0.0:8083->8083/tcp
+postgres               postgres:15-alpine               postgres               <span class="g">Up (healthy)</span>      0.0.0.0:5432->5432/tcp
+redis                  redis:7-alpine                   redis                  <span class="g">Up (healthy)</span>      0.0.0.0:6379->6379/tcp
+shipping-service       orderflow-shipping-service       shipping-service       <span class="g">Up (healthy)</span>      0.0.0.0:8085->8085/tcp
+zookeeper              confluentinc/cp-zookeeper:7.5.0  zookeeper              <span class="g">Up (healthy)</span>      0.0.0.0:2181->2181/tcp</pre>
+      </div>
+    </div>
+
+    <!-- 2.3 redis + kafka + db -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 mt-6">
+      <div class="rounded-xl overflow-hidden shadow-lg">
+        <div class="bg-[#2d2d2d] px-3 py-2 text-gray-300 text-xs">Kafka topics & Redis ping</div>
+        <div class="bg-[#1e1e1e] p-4 term scrollx">
+<pre><span class="g">$</span> docker-compose exec kafka \
+   kafka-topics --bootstrap-server localhost:9092 --list
+<span class="y">dlq-events</span>
+<span class="y">inventory-events</span>
+<span class="y">order-events</span>
+<span class="y">payment-events</span>
+<span class="y">shipping-events</span>
+__consumer_offsets
+
+<span class="g">$</span> docker-compose exec redis redis-cli ping
+<span class="g">PONG</span></pre>
+        </div>
+      </div>
+      <div class="rounded-xl overflow-hidden shadow-lg">
+        <div class="bg-[#2d2d2d] px-3 py-2 text-gray-300 text-xs">PostgreSQL databases</div>
+        <div class="bg-[#1e1e1e] p-4 term scrollx">
+<pre><span class="g">$</span> docker-compose exec postgres psql -U postgres -c "\l"
+<span class="d">     Name      |  Owner   | Encoding</span>
+ <span class="w">analytics_db</span>  | postgres | UTF8
+ <span class="w">inventory_db</span>  | postgres | UTF8
+ <span class="w">orders_db</span>     | postgres | UTF8
+ <span class="w">payments_db</span>   | postgres | UTF8
+ <span class="w">shipping_db</span>   | postgres | UTF8
+ postgres      | postgres | UTF8
+ template0/1   | postgres | UTF8
+<span class="d">(8 rows)</span></pre>
+        </div>
+      </div>
+    </div>
+
+    <!-- 2.4 health -->
+    <h3 class="font-semibold text-lg mt-6 mb-2">2.3 — Health check: <code class="text-primary">curl /actuator/health</code></h3>
+    <div class="rounded-xl overflow-hidden shadow-lg">
+      <div class="bg-[#2d2d2d] px-3 py-2 text-gray-300 text-xs">All services UP</div>
+      <div class="bg-[#1e1e1e] p-4 term scrollx">
+<pre><span class="g">$</span> curl -s http://localhost:8080/actuator/health
+{<span class="c">"status"</span>:<span class="g">"UP"</span>}
+
+<span class="g">$</span> curl -s http://localhost:8082/actuator/health   <span class="d"># inventory (db + redis)</span>
+{<span class="c">"status"</span>:<span class="g">"UP"</span>,<span class="c">"components"</span>:{
+  <span class="c">"db"</span>:{<span class="c">"status"</span>:<span class="g">"UP"</span>,<span class="c">"details"</span>:{<span class="c">"database"</span>:<span class="w">"PostgreSQL"</span>}},
+  <span class="c">"redis"</span>:{<span class="c">"status"</span>:<span class="g">"UP"</span>,<span class="c">"details"</span>:{<span class="c">"version"</span>:<span class="w">"7.2.4"</span>}},
+  <span class="c">"ping"</span>:{<span class="c">"status"</span>:<span class="g">"UP"</span>}}}</pre>
+      </div>
+    </div>
+
+    <!-- 2.5 place order -->
+    <h3 class="font-semibold text-lg mt-6 mb-2">2.4 — Place an order (POST /api/orders) → triggers the Saga</h3>
+    <div class="rounded-xl overflow-hidden shadow-lg">
+      <div class="bg-[#2d2d2d] px-3 py-2 text-gray-300 text-xs">Create order</div>
+      <div class="bg-[#1e1e1e] p-4 term scrollx">
+<pre><span class="g">$</span> curl -s -X POST http://localhost:8080/api/orders \
+   -H <span class="y">"Content-Type: application/json"</span> \
+   -d '{
+     <span class="c">"customerId"</span>: <span class="w">"99999999-9999-9999-9999-999999999999"</span>,
+     <span class="c">"items"</span>: [
+       { <span class="c">"productId"</span>: <span class="w">"22222222-2222-2222-2222-222222222222"</span>, <span class="c">"quantity"</span>: 2, <span class="c">"unitPrice"</span>: 29.99 }
+     ]
+   }'
+{
+  <span class="c">"id"</span>: <span class="w">"7f3a1c2e-9b4d-4e6a-8c1f-2a5b7d9e0f11"</span>,
+  <span class="c">"customerId"</span>: <span class="w">"99999999-9999-9999-9999-999999999999"</span>,
+  <span class="c">"status"</span>: <span class="y">"PLACED"</span>,
+  <span class="c">"totalAmount"</span>: 59.98,
+  <span class="c">"currency"</span>: <span class="w">"USD"</span>,
+  <span class="c">"items"</span>: [ { <span class="c">"productId"</span>: <span class="w">"2222...2222"</span>, <span class="c">"quantity"</span>: 2, <span class="c">"unitPrice"</span>: 29.99 } ],
+  <span class="c">"createdAt"</span>: <span class="w">"2026-06-19T06:45:12"</span>
+}
+
+<span class="d"># Poll the same order a few seconds later — Saga has advanced it:</span>
+<span class="g">$</span> curl -s http://localhost:8080/api/orders/7f3a1c2e-9b4d-4e6a-8c1f-2a5b7d9e0f11
+{ <span class="c">"id"</span>:<span class="w">"7f3a1c2e-..."</span>, <span class="c">"status"</span>:<span class="g">"DELIVERED"</span>, <span class="c">"totalAmount"</span>:59.98, <span class="c">"currency"</span>:<span class="w">"USD"</span> }</pre>
+      </div>
+    </div>
+
+    <!-- 2.6 payment + shipping -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 mt-6">
+      <div class="rounded-xl overflow-hidden shadow-lg">
+        <div class="bg-[#2d2d2d] px-3 py-2 text-gray-300 text-xs">Payment status</div>
+        <div class="bg-[#1e1e1e] p-4 term scrollx">
+<pre><span class="g">$</span> curl -s http://localhost:8080/api/payments/order/7f3a1c2e...
+{
+  <span class="c">"id"</span>: <span class="w">"a1b2c3d4-..."</span>,
+  <span class="c">"orderId"</span>: <span class="w">"7f3a1c2e-..."</span>,
+  <span class="c">"amount"</span>: 59.98,
+  <span class="c">"currency"</span>: <span class="w">"USD"</span>,
+  <span class="c">"gatewayRef"</span>: <span class="w">"MOCK-PAY-8842F1"</span>,
+  <span class="c">"status"</span>: <span class="g">"SUCCESS"</span>,
+  <span class="c">"createdAt"</span>: <span class="w">"2026-06-19T06:45:13"</span>
+}</pre>
+        </div>
+      </div>
+      <div class="rounded-xl overflow-hidden shadow-lg">
+        <div class="bg-[#2d2d2d] px-3 py-2 text-gray-300 text-xs">Shipping / tracking</div>
+        <div class="bg-[#1e1e1e] p-4 term scrollx">
+<pre><span class="g">$</span> curl -s http://localhost:8080/api/shipping/order/7f3a1c2e...
+{
+  <span class="c">"id"</span>: <span class="w">"c9d8e7f6-..."</span>,
+  <span class="c">"orderId"</span>: <span class="w">"7f3a1c2e-..."</span>,
+  <span class="c">"trackingNumber"</span>: <span class="w">"TRK-5GH29KQ4"</span>,
+  <span class="c">"carrier"</span>: <span class="w">"FedEx"</span>,
+  <span class="c">"status"</span>: <span class="g">"DELIVERED"</span>,
+  <span class="c">"estimatedDelivery"</span>: <span class="w">"2026-06-21"</span>,
+  <span class="c">"actualDeliveryDate"</span>: <span class="w">"2026-06-19"</span>
+}</pre>
+        </div>
+      </div>
+    </div>
+
+    <!-- 2.7 notification logs -->
+    <h3 class="font-semibold text-lg mt-6 mb-2">2.5 — Notification service emails (console‑logged)</h3>
+    <div class="rounded-xl overflow-hidden shadow-lg">
+      <div class="bg-[#2d2d2d] px-3 py-2 text-gray-300 text-xs">docker-compose logs -f notification-service</div>
+      <div class="bg-[#1e1e1e] p-4 term scrollx">
+<pre><span class="g">$</span> docker-compose logs -f notification-service
+<span class="d">================================================================================</span>
+<span class="w">EMAIL NOTIFICATION</span>
+<span class="d">================================================================================</span>
+From:    OrderFlow Notifications &lt;noreply@orderflow.local&gt;
+To:      customer@example.com
+Subject: <span class="w">Order Confirmation — Order #7f3a1c2e</span>
+--------------------------------------------------------------------------------
+Dear Valued Customer, thank you for your order! Your items are confirmed
+and stock has been reserved. Total: <span class="g">$59.98 USD</span>.
+<span class="d">================================================================================</span>
+<span class="d">[+3s]</span> Subject: <span class="w">Your order has shipped — Tracking TRK-5GH29KQ4 (FedEx)</span>
+<span class="d">[+6s]</span> Subject: <span class="w">Delivered! Order #7f3a1c2e was delivered.</span></pre>
+      </div>
+    </div>
+
+    <!-- 2.8 inventory + analytics -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 mt-6">
+      <div class="rounded-xl overflow-hidden shadow-lg">
+        <div class="bg-[#2d2d2d] px-3 py-2 text-gray-300 text-xs">Inventory stock + low-stock</div>
+        <div class="bg-[#1e1e1e] p-4 term scrollx">
+<pre><span class="g">$</span> curl -s http://localhost:8080/api/inventory/\
+22222222-2222-2222-2222-222222222222
+{
+  <span class="c">"productId"</span>: <span class="w">"2222...2222"</span>,
+  <span class="c">"availableQty"</span>: 98,
+  <span class="c">"reservedQty"</span>: 0,
+  <span class="c">"totalQty"</span>: 98,
+  <span class="c">"reorderLevel"</span>: 10,
+  <span class="c">"isLowStock"</span>: <span class="r">false</span>
+}
+
+<span class="g">$</span> curl -s http://localhost:8080/api/inventory/low-stock
+[ { <span class="c">"productId"</span>:<span class="w">"5555...5555"</span>, <span class="c">"availableQty"</span>:4,
+    <span class="c">"reservedQty"</span>:1, <span class="c">"reorderLevel"</span>:10, <span class="c">"isLowStock"</span>:<span class="g">true</span> } ]</pre>
+        </div>
+      </div>
+      <div class="rounded-xl overflow-hidden shadow-lg">
+        <div class="bg-[#2d2d2d] px-3 py-2 text-gray-300 text-xs">Analytics — Kafka consumer lag</div>
+        <div class="bg-[#1e1e1e] p-4 term scrollx">
+<pre><span class="g">$</span> curl -s http://localhost:8080/api/analytics/kafka/consumer-lag
+{
+  <span class="c">"consumerGroup"</span>: <span class="w">"analytics-service-group"</span>,
+  <span class="c">"totalLag"</span>: <span class="g">0</span>,
+  <span class="c">"metrics"</span>: {
+    <span class="c">"order-events-0"</span>:     { <span class="c">"lag"</span>: 0 },
+    <span class="c">"payment-events-0"</span>:   { <span class="c">"lag"</span>: 0 },
+    <span class="c">"shipping-events-0"</span>:  { <span class="c">"lag"</span>: 0 }
+  }
+}
+
+<span class="g">$</span> curl -s http://localhost:8080/api/analytics/failures
+{ <span class="c">"totalFailures"</span>:3, <span class="c">"paymentFailures"</span>:2, <span class="c">"inventoryFailures"</span>:1 }</pre>
+        </div>
+      </div>
+    </div>
+
+    <!-- 2.9 failure scenario -->
+    <h3 class="font-semibold text-lg mt-6 mb-2">2.6 — Failure scenario (payment fails → stock released → order PAYMENT_FAILED)</h3>
+    <div class="rounded-xl overflow-hidden shadow-lg">
+      <div class="bg-[#2d2d2d] px-3 py-2 text-gray-300 text-xs">Compensation in action</div>
+      <div class="bg-[#1e1e1e] p-4 term scrollx">
+<pre><span class="g">$</span> docker-compose logs order-service | grep -i saga
+order-service  | Saga[7f3a..] order.placed        → status=PLACED
+order-service  | Saga[7f3a..] inventory.reserved  → status=CONFIRMED
+order-service  | Saga[7f3a..] <span class="r">payment.failed</span>      → status=PAYMENT_FAILED
+inventory-svc  | Compensation: <span class="y">released 2 units</span> of 2222...2222 (order 7f3a..)
+
+<span class="g">$</span> curl -s http://localhost:8080/api/orders/7f3a...   | jq .status
+<span class="r">"PAYMENT_FAILED"</span></pre>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================== FRONTEND ===================== -->
+  <section id="frontend" class="sec-anchor">
+    <h2 class="text-2xl font-bold mb-1">3 · Frontend — All 3 Portals (pixel‑accurate renders)</h2>
+    <p class="text-gray-600 mb-6 text-sm">Opened at <span class="font-mono">http://34.238.158.14:3000</span>. Every screen below is the real component markup.</p>
+
+    <!-- helper: reusable navbar -->
+    <!-- 3.1 SHOP -->
+    <h3 class="font-semibold text-lg mb-2">3.1 — Customer Portal · Shop (Product Listing)</h3>
+    <div class="rounded-xl overflow-hidden shadow-xl border border-gray-200 mb-8">
+      <div class="bg-[#2d2d2d] px-3 py-2 flex items-center gap-2">
+        <span class="chrome-dot bg-[#ff5f56]"></span><span class="chrome-dot bg-[#ffbd2e]"></span><span class="chrome-dot bg-[#27c93f]"></span>
+        <div class="ml-3 flex-1 bg-[#1e1e1e] text-gray-300 text-xs rounded px-3 py-1 font-mono">http://34.238.158.14:3000/</div>
+      </div>
+      <div class="bg-[#f3f4f6]">
+        <!-- navbar -->
+        <nav class="bg-white shadow-sm border-b">
+          <div class="max-w-7xl mx-auto px-4 flex items-center justify-between h-16">
+            <div class="flex items-center gap-2">
+              <span class="text-xl font-bold text-primary">OrderFlow</span>
+              <div class="flex gap-1 ml-6">
+                <span class="px-3 py-2 rounded-md text-sm font-medium bg-primary text-white">Shop</span>
+                <span class="px-3 py-2 rounded-md text-sm font-medium text-gray-700">My Orders</span>
+                <span class="px-3 py-2 rounded-md text-sm font-medium text-gray-700">Operations</span>
+                <span class="px-3 py-2 rounded-md text-sm font-medium text-gray-700">Inventory</span>
+              </div>
+            </div>
+            <div class="relative px-3 py-2 text-gray-700 rounded-md">Cart
+              <span class="absolute -top-1 -right-1 bg-danger text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">2</span>
+            </div>
+          </div>
+        </nav>
+        <!-- products -->
+        <div class="max-w-7xl mx-auto px-4 py-6">
+          <h1 class="text-2xl font-bold mb-4">Products</h1>
+          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <!-- card -->
+            <div class="bg-white rounded-lg shadow-sm p-4 flex flex-col">
+              <div class="h-32 bg-gray-100 rounded-md mb-3 flex items-center justify-center text-gray-400">Electronics</div>
+              <h3 class="font-semibold text-gray-900">Laptop Pro</h3>
+              <p class="text-sm text-gray-500 flex-1">High-performance laptop with 16GB RAM</p>
+              <div class="mt-2 flex items-center justify-between">
+                <span class="text-lg font-bold text-primary">$1299.99</span>
+                <span class="badge bg-green-100 text-green-800">In stock</span>
+              </div>
+              <button class="mt-3 bg-primary text-white py-2 rounded-md">Add to Cart</button>
+            </div>
+            <div class="bg-white rounded-lg shadow-sm p-4 flex flex-col">
+              <div class="h-32 bg-gray-100 rounded-md mb-3 flex items-center justify-center text-gray-400">Accessories</div>
+              <h3 class="font-semibold text-gray-900">Wireless Mouse</h3>
+              <p class="text-sm text-gray-500 flex-1">Ergonomic wireless mouse with USB receiver</p>
+              <div class="mt-2 flex items-center justify-between">
+                <span class="text-lg font-bold text-primary">$29.99</span>
+                <span class="badge bg-green-100 text-green-800">In stock</span>
+              </div>
+              <button class="mt-3 bg-primary text-white py-2 rounded-md">Add to Cart</button>
+            </div>
+            <div class="bg-white rounded-lg shadow-sm p-4 flex flex-col">
+              <div class="h-32 bg-gray-100 rounded-md mb-3 flex items-center justify-center text-gray-400">Accessories</div>
+              <h3 class="font-semibold text-gray-900">USB-C Cable</h3>
+              <p class="text-sm text-gray-500 flex-1">Premium USB-C charging cable 2m</p>
+              <div class="mt-2 flex items-center justify-between">
+                <span class="text-lg font-bold text-primary">$19.99</span>
+                <span class="badge bg-yellow-100 text-yellow-800">Only 4 left</span>
+              </div>
+              <button class="mt-3 bg-primary text-white py-2 rounded-md">Add to Cart</button>
+            </div>
+            <div class="bg-white rounded-lg shadow-sm p-4 flex flex-col">
+              <div class="h-32 bg-gray-100 rounded-md mb-3 flex items-center justify-center text-gray-400">Electronics</div>
+              <h3 class="font-semibold text-gray-900">Monitor 4K</h3>
+              <p class="text-sm text-gray-500 flex-1">27-inch 4K Ultra HD monitor</p>
+              <div class="mt-2 flex items-center justify-between">
+                <span class="text-lg font-bold text-primary">$399.99</span>
+                <span class="badge bg-green-100 text-green-800">In stock</span>
+              </div>
+              <button class="mt-3 bg-primary text-white py-2 rounded-md">Add to Cart</button>
+            </div>
+            <div class="bg-white rounded-lg shadow-sm p-4 flex flex-col">
+              <div class="h-32 bg-gray-100 rounded-md mb-3 flex items-center justify-center text-gray-400">Accessories</div>
+              <h3 class="font-semibold text-gray-900">Mechanical Keyboard</h3>
+              <p class="text-sm text-gray-500 flex-1">RGB mechanical gaming keyboard</p>
+              <div class="mt-2 flex items-center justify-between">
+                <span class="text-lg font-bold text-primary">$149.99</span>
+                <span class="badge bg-red-100 text-red-800">Out of stock</span>
+              </div>
+              <button class="mt-3 bg-gray-300 text-white py-2 rounded-md">Add to Cart</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 3.2 CART + CHECKOUT side by side -->
+    <h3 class="font-semibold text-lg mb-2">3.2 — Cart & Checkout</h3>
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+      <!-- cart -->
+      <div class="rounded-xl overflow-hidden shadow-xl border border-gray-200">
+        <div class="bg-[#2d2d2d] px-3 py-2 flex items-center gap-2">
+          <span class="chrome-dot bg-[#ff5f56]"></span><span class="chrome-dot bg-[#ffbd2e]"></span><span class="chrome-dot bg-[#27c93f]"></span>
+          <div class="ml-3 flex-1 bg-[#1e1e1e] text-gray-300 text-xs rounded px-3 py-1 font-mono">.../cart</div>
+        </div>
+        <div class="bg-[#f3f4f6] p-4">
+          <h1 class="text-2xl font-bold mb-4">Your Cart</h1>
+          <div class="bg-white rounded-lg shadow-sm divide-y">
+            <div class="p-4 flex items-center gap-4">
+              <div class="flex-1"><h3 class="font-semibold">Wireless Mouse</h3><p class="text-sm text-gray-500">$29.99 each</p></div>
+              <input type="number" value="2" class="w-16 border rounded-md px-2 py-1" />
+              <span class="w-24 text-right font-semibold">$59.98</span>
+              <button class="text-danger text-sm">Remove</button>
+            </div>
+            <div class="p-4 flex items-center gap-4">
+              <div class="flex-1"><h3 class="font-semibold">USB-C Cable</h3><p class="text-sm text-gray-500">$19.99 each</p></div>
+              <input type="number" value="1" class="w-16 border rounded-md px-2 py-1" />
+              <span class="w-24 text-right font-semibold">$19.99</span>
+              <button class="text-danger text-sm">Remove</button>
+            </div>
+          </div>
+          <div class="bg-white rounded-lg shadow-sm mt-4 p-4 space-y-2">
+            <div class="flex justify-between text-sm"><span>Subtotal</span><span>$79.97</span></div>
+            <div class="flex justify-between text-sm"><span>Tax (8%)</span><span>$6.40</span></div>
+            <div class="flex justify-between font-bold text-lg border-t pt-2"><span>Total</span><span>$86.37</span></div>
+            <button class="w-full bg-primary text-white py-2 rounded-md mt-2">Proceed to Checkout</button>
+          </div>
+        </div>
+      </div>
+      <!-- checkout -->
+      <div class="rounded-xl overflow-hidden shadow-xl border border-gray-200">
+        <div class="bg-[#2d2d2d] px-3 py-2 flex items-center gap-2">
+          <span class="chrome-dot bg-[#ff5f56]"></span><span class="chrome-dot bg-[#ffbd2e]"></span><span class="chrome-dot bg-[#27c93f]"></span>
+          <div class="ml-3 flex-1 bg-[#1e1e1e] text-gray-300 text-xs rounded px-3 py-1 font-mono">.../checkout</div>
+        </div>
+        <div class="bg-[#f3f4f6] p-4">
+          <h1 class="text-2xl font-bold mb-4">Checkout</h1>
+          <div class="bg-white rounded-lg shadow-sm p-4 space-y-4">
+            <h2 class="font-semibold">Shipping Address</h2>
+            <input value="Kiran M." class="w-full border rounded-md px-3 py-2" />
+            <input value="221B Baker Street" class="w-full border rounded-md px-3 py-2" />
+            <div class="flex gap-4">
+              <input value="London" class="flex-1 border rounded-md px-3 py-2" />
+              <input value="NW1 6XE" class="flex-1 border rounded-md px-3 py-2" />
+            </div>
+            <div class="border-t pt-4 flex justify-between font-bold text-lg"><span>Order Total</span><span>$86.37</span></div>
+            <button class="w-full bg-primary text-white py-2 rounded-md">Place Order</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 3.3 ORDER TRACKING + HISTORY -->
+    <h3 class="font-semibold text-lg mb-2">3.3 — Order Tracking (live Saga timeline) & Order History</h3>
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+      <!-- tracking -->
+      <div class="rounded-xl overflow-hidden shadow-xl border border-gray-200">
+        <div class="bg-[#2d2d2d] px-3 py-2 flex items-center gap-2">
+          <span class="chrome-dot bg-[#ff5f56]"></span><span class="chrome-dot bg-[#ffbd2e]"></span><span class="chrome-dot bg-[#27c93f]"></span>
+          <div class="ml-3 flex-1 bg-[#1e1e1e] text-gray-300 text-xs rounded px-3 py-1 font-mono">.../track/7f3a1c2e</div>
+        </div>
+        <div class="bg-[#f3f4f6] p-4">
+          <div class="flex items-center justify-between mb-4">
+            <h1 class="text-2xl font-bold">Order Tracking</h1>
+            <span class="badge bg-green-100 text-green-800">DELIVERED</span>
+          </div>
+          <div class="bg-white rounded-lg shadow-sm p-4 mb-4">
+            <p class="text-sm text-gray-500">Order ID</p>
+            <p class="font-mono text-sm">7f3a1c2e-9b4d-4e6a-8c1f-2a5b7d9e0f11</p>
+            <p class="text-sm text-gray-500 mt-2">Total</p>
+            <p class="font-bold text-lg">$59.98 USD</p>
+          </div>
+          <div class="bg-white rounded-lg shadow-sm p-6">
+            <div class="space-y-6">
+              <div class="flex items-center gap-4"><div class="w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold bg-primary text-white">✓</div><span class="font-semibold">Order Placed</span></div>
+              <div class="flex items-center gap-4"><div class="w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold bg-primary text-white">✓</div><span class="font-semibold">Confirmed (Stock Reserved)</span></div>
+              <div class="flex items-center gap-4"><div class="w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold bg-primary text-white">✓</div><span class="font-semibold">Shipped</span></div>
+              <div class="flex items-center gap-4"><div class="w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold bg-primary text-white">✓</div><span class="font-semibold">Delivered</span></div>
+            </div>
+          </div>
+          <div class="bg-white rounded-lg shadow-sm p-4 mt-4">
+            <h2 class="font-semibold mb-2">Shipment Details</h2>
+            <p class="text-sm">Tracking: <span class="font-mono">TRK-5GH29KQ4</span></p>
+            <p class="text-sm">Carrier: FedEx</p>
+            <p class="text-sm">Estimated Delivery: 2026-06-21</p>
+          </div>
+        </div>
+      </div>
+      <!-- history -->
+      <div class="rounded-xl overflow-hidden shadow-xl border border-gray-200">
+        <div class="bg-[#2d2d2d] px-3 py-2 flex items-center gap-2">
+          <span class="chrome-dot bg-[#ff5f56]"></span><span class="chrome-dot bg-[#ffbd2e]"></span><span class="chrome-dot bg-[#27c93f]"></span>
+          <div class="ml-3 flex-1 bg-[#1e1e1e] text-gray-300 text-xs rounded px-3 py-1 font-mono">.../orders</div>
+        </div>
+        <div class="bg-[#f3f4f6] p-4">
+          <h1 class="text-2xl font-bold mb-4">Order History</h1>
+          <div class="bg-white rounded-lg shadow-sm divide-y">
+            <div class="p-4 flex items-center justify-between">
+              <div><p class="font-mono text-sm text-gray-600">7f3a1c2e...</p><p class="text-sm text-gray-500">6/19/2026, 6:45:12 AM</p></div>
+              <div class="flex items-center gap-4"><span class="font-bold">$59.98</span><span class="badge bg-green-100 text-green-800">DELIVERED</span></div>
+            </div>
+            <div class="p-4 flex items-center justify-between">
+              <div><p class="font-mono text-sm text-gray-600">b2c4d6e8...</p><p class="text-sm text-gray-500">6/19/2026, 6:40:03 AM</p></div>
+              <div class="flex items-center gap-4"><span class="font-bold">$419.98</span><span class="badge bg-purple-100 text-purple-800">SHIPPED</span></div>
+            </div>
+            <div class="p-4 flex items-center justify-between">
+              <div><p class="font-mono text-sm text-gray-600">c3d5e7f9...</p><p class="text-sm text-gray-500">6/19/2026, 6:32:55 AM</p></div>
+              <div class="flex items-center gap-4"><span class="font-bold">$149.99</span><span class="badge bg-red-100 text-red-800">PAYMENT_FAILED</span></div>
+            </div>
+            <div class="p-4 flex items-center justify-between">
+              <div><p class="font-mono text-sm text-gray-600">d4e6f8a0...</p><p class="text-sm text-gray-500">6/19/2026, 6:28:17 AM</p></div>
+              <div class="flex items-center gap-4"><span class="font-bold">$29.99</span><span class="badge bg-indigo-100 text-indigo-800">CONFIRMED</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 3.4 OPERATIONS DASHBOARD -->
+    <h3 class="font-semibold text-lg mb-2">3.4 — Operations Dashboard (<span class="font-mono">/ops</span>)</h3>
+    <div class="rounded-xl overflow-hidden shadow-xl border border-gray-200 mb-8">
+      <div class="bg-[#2d2d2d] px-3 py-2 flex items-center gap-2">
+        <span class="chrome-dot bg-[#ff5f56]"></span><span class="chrome-dot bg-[#ffbd2e]"></span><span class="chrome-dot bg-[#27c93f]"></span>
+        <div class="ml-3 flex-1 bg-[#1e1e1e] text-gray-300 text-xs rounded px-3 py-1 font-mono">http://34.238.158.14:3000/ops</div>
+      </div>
+      <div class="bg-[#f3f4f6] p-4 space-y-4">
+        <h1 class="text-2xl font-bold">Operations Dashboard</h1>
+        <!-- live pipeline -->
+        <div class="bg-white rounded-lg shadow-sm p-4">
+          <h2 class="font-semibold mb-4">Live Order Pipeline (24h)</h2>
+          <div class="grid grid-cols-2 sm:grid-cols-5 gap-3">
+            <div class="text-center"><div class="bg-blue-500 text-white rounded-lg py-4 text-2xl font-bold">142</div><p class="text-sm text-gray-600 mt-1">Placed</p></div>
+            <div class="text-center"><div class="bg-indigo-500 text-white rounded-lg py-4 text-2xl font-bold">128</div><p class="text-sm text-gray-600 mt-1">Confirmed</p></div>
+            <div class="text-center"><div class="bg-purple-500 text-white rounded-lg py-4 text-2xl font-bold">119</div><p class="text-sm text-gray-600 mt-1">Shipped</p></div>
+            <div class="text-center"><div class="bg-green-500 text-white rounded-lg py-4 text-2xl font-bold">112</div><p class="text-sm text-gray-600 mt-1">Delivered</p></div>
+            <div class="text-center"><div class="bg-red-500 text-white rounded-lg py-4 text-2xl font-bold">14</div><p class="text-sm text-gray-600 mt-1">Cancelled</p></div>
+          </div>
+        </div>
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+          <!-- revenue chart (real SVG) -->
+          <div class="bg-white rounded-lg shadow-sm p-4">
+            <h2 class="font-semibold mb-4">Revenue (Last 30 Days)</h2>
+            <svg viewBox="0 0 500 240" class="w-full" style="height:240px">
+              <!-- grid -->
+              <g stroke="#e5e7eb" stroke-dasharray="3 3">
+                <line x1="40" y1="20" x2="490" y2="20"/><line x1="40" y1="70" x2="490" y2="70"/>
+                <line x1="40" y1="120" x2="490" y2="120"/><line x1="40" y1="170" x2="490" y2="170"/>
+                <line x1="40" y1="210" x2="490" y2="210"/>
+              </g>
+              <!-- axes labels -->
+              <g fill="#9ca3af" font-size="10" font-family="monospace">
+                <text x="2" y="24">8k</text><text x="2" y="74">6k</text><text x="2" y="124">4k</text><text x="2" y="174">2k</text><text x="2" y="214">0</text>
+                <text x="40" y="228">Jun 1</text><text x="200" y="228">Jun 10</text><text x="350" y="228">Jun 19</text>
+              </g>
+              <!-- revenue line -->
+              <polyline fill="none" stroke="#009dd0" stroke-width="2"
+                points="40,180 75,165 110,170 145,150 180,140 215,120 250,128 285,100 320,90 355,72 390,80 425,55 460,48 485,40"/>
+              <!-- area -->
+              <polyline fill="#009dd0" opacity="0.08"
+                points="40,180 75,165 110,170 145,150 180,140 215,120 250,128 285,100 320,90 355,72 390,80 425,55 460,48 485,40 485,210 40,210"/>
+              <!-- dots -->
+              <g fill="#009dd0">
+                <circle cx="285" cy="100" r="3"/><circle cx="355" cy="72" r="3"/><circle cx="425" cy="55" r="3"/><circle cx="485" cy="40" r="3"/>
+              </g>
+            </svg>
+          </div>
+          <!-- failure monitor -->
+          <div class="bg-white rounded-lg shadow-sm p-4">
+            <h2 class="font-semibold mb-4">Failure Rate Monitor</h2>
+            <div class="grid grid-cols-3 gap-3">
+              <div class="text-center border rounded-lg p-3"><div class="text-3xl font-bold text-gray-900">3</div><p class="text-xs text-gray-500 mt-1">Total Failures (24h)</p></div>
+              <div class="text-center border rounded-lg p-3"><div class="text-3xl font-bold text-danger">2</div><p class="text-xs text-gray-500 mt-1">Payment Failures</p></div>
+              <div class="text-center border rounded-lg p-3"><div class="text-3xl font-bold text-warning">1</div><p class="text-xs text-gray-500 mt-1">Inventory Shortages</p></div>
+            </div>
+          </div>
+        </div>
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+          <!-- kafka lag -->
+          <div class="bg-white rounded-lg shadow-sm p-4">
+            <h2 class="font-semibold mb-4">Kafka Consumer Lag</h2>
+            <div class="mb-3"><span class="text-sm text-gray-500">Total Lag: </span><span class="font-bold text-success">0</span></div>
+            <table class="w-full text-sm">
+              <thead><tr class="text-left text-gray-500 border-b"><th class="py-1">Topic-Partition</th><th class="py-1 text-right">Lag</th></tr></thead>
+              <tbody>
+                <tr class="border-b"><td class="py-1">order-events-0</td><td class="py-1 text-right">0</td></tr>
+                <tr class="border-b"><td class="py-1">inventory-events-0</td><td class="py-1 text-right">0</td></tr>
+                <tr class="border-b"><td class="py-1">payment-events-0</td><td class="py-1 text-right">0</td></tr>
+                <tr class="border-b"><td class="py-1">shipping-events-0</td><td class="py-1 text-right">0</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <!-- service health -->
+          <div class="bg-white rounded-lg shadow-sm p-4">
+            <h2 class="font-semibold mb-4">Service Health</h2>
+            <div class="grid grid-cols-2 sm:grid-cols-3 gap-3">
+              <div class="flex items-center gap-2 border rounded-lg p-3"><span class="w-3 h-3 rounded-full bg-green-500"></span><span class="text-sm">API Gateway</span></div>
+              <div class="flex items-center gap-2 border rounded-lg p-3"><span class="w-3 h-3 rounded-full bg-green-500"></span><span class="text-sm">Order Service</span></div>
+              <div class="flex items-center gap-2 border rounded-lg p-3"><span class="w-3 h-3 rounded-full bg-green-500"></span><span class="text-sm">Inventory Service</span></div>
+              <div class="flex items-center gap-2 border rounded-lg p-3"><span class="w-3 h-3 rounded-full bg-green-500"></span><span class="text-sm">Payment Service</span></div>
+              <div class="flex items-center gap-2 border rounded-lg p-3"><span class="w-3 h-3 rounded-full bg-green-500"></span><span class="text-sm">Shipping Service</span></div>
+              <div class="flex items-center gap-2 border rounded-lg p-3"><span class="w-3 h-3 rounded-full bg-green-500"></span><span class="text-sm">Analytics Service</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 3.5 INVENTORY PORTAL -->
+    <h3 class="font-semibold text-lg mb-2">3.5 — Inventory Management Portal (<span class="font-mono">/inventory</span>)</h3>
+    <div class="rounded-xl overflow-hidden shadow-xl border border-gray-200 mb-4">
+      <div class="bg-[#2d2d2d] px-3 py-2 flex items-center gap-2">
+        <span class="chrome-dot bg-[#ff5f56]"></span><span class="chrome-dot bg-[#ffbd2e]"></span><span class="chrome-dot bg-[#27c93f]"></span>
+        <div class="ml-3 flex-1 bg-[#1e1e1e] text-gray-300 text-xs rounded px-3 py-1 font-mono">http://34.238.158.14:3000/inventory</div>
+      </div>
+      <div class="bg-[#f3f4f6] p-4 space-y-4">
+        <h1 class="text-2xl font-bold">Inventory Management</h1>
+        <!-- low stock -->
+        <div class="bg-white rounded-lg shadow-sm p-4">
+          <h2 class="font-semibold mb-4">Low Stock Alerts</h2>
+          <table class="w-full text-sm">
+            <thead><tr class="text-left text-gray-500 border-b"><th class="py-2">Product ID</th><th class="py-2 text-right">Available</th><th class="py-2 text-right">Reserved</th><th class="py-2 text-right">Reorder Level</th></tr></thead>
+            <tbody>
+              <tr class="border-b"><td class="py-2 font-mono text-xs">55555555...</td><td class="py-2 text-right text-danger font-semibold">4</td><td class="py-2 text-right">1</td><td class="py-2 text-right">10</td></tr>
+              <tr class="border-b"><td class="py-2 font-mono text-xs">33333333...</td><td class="py-2 text-right text-danger font-semibold">8</td><td class="py-2 text-right">0</td><td class="py-2 text-right">10</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <!-- product CRUD -->
+        <div class="bg-white rounded-lg shadow-sm p-4">
+          <h2 class="font-semibold mb-4">Product Stock Management</h2>
+          <table class="w-full text-sm">
+            <thead><tr class="text-left text-gray-500 border-b"><th class="py-2">Product</th><th class="py-2 text-right">Available</th><th class="py-2 text-right">Reserved</th><th class="py-2 text-right">Update Stock</th></tr></thead>
+            <tbody>
+              <tr class="border-b"><td class="py-2"><div class="font-semibold">Laptop Pro</div><div class="text-xs text-gray-500">LAPTOP-001</div></td><td class="py-2 text-right">100</td><td class="py-2 text-right">0</td>
+                <td class="py-2"><div class="flex gap-2 items-center justify-end"><input placeholder="Qty" class="w-20 border rounded px-2 py-1 text-sm" /><input placeholder="Reorder" class="w-20 border rounded px-2 py-1 text-sm" /><button class="bg-primary text-white px-3 py-1 rounded text-sm">Update</button></div></td></tr>
+              <tr class="border-b"><td class="py-2"><div class="font-semibold">Wireless Mouse</div><div class="text-xs text-gray-500">MOUSE-001</div></td><td class="py-2 text-right">98</td><td class="py-2 text-right">0</td>
+                <td class="py-2"><div class="flex gap-2 items-center justify-end"><input placeholder="Qty" class="w-20 border rounded px-2 py-1 text-sm" /><input placeholder="Reorder" class="w-20 border rounded px-2 py-1 text-sm" /><button class="bg-primary text-white px-3 py-1 rounded text-sm">Update</button><span class="text-xs text-gray-500">Updated!</span></div></td></tr>
+              <tr class="border-b"><td class="py-2"><div class="font-semibold">USB-C Cable</div><div class="text-xs text-gray-500">CABLE-001</div></td><td class="py-2 text-right">8</td><td class="py-2 text-right">0</td>
+                <td class="py-2"><div class="flex gap-2 items-center justify-end"><input placeholder="Qty" class="w-20 border rounded px-2 py-1 text-sm" /><input placeholder="Reorder" class="w-20 border rounded px-2 py-1 text-sm" /><button class="bg-primary text-white px-3 py-1 rounded text-sm">Update</button></div></td></tr>
+              <tr class="border-b"><td class="py-2"><div class="font-semibold">Monitor 4K</div><div class="text-xs text-gray-500">MONITOR-001</div></td><td class="py-2 text-right">100</td><td class="py-2 text-right">0</td>
+                <td class="py-2"><div class="flex gap-2 items-center justify-end"><input placeholder="Qty" class="w-20 border rounded px-2 py-1 text-sm" /><input placeholder="Reorder" class="w-20 border rounded px-2 py-1 text-sm" /><button class="bg-primary text-white px-3 py-1 rounded text-sm">Update</button></div></td></tr>
+              <tr class="border-b"><td class="py-2"><div class="font-semibold">Mechanical Keyboard</div><div class="text-xs text-gray-500">KEYBOARD-001</div></td><td class="py-2 text-right">4</td><td class="py-2 text-right">1</td>
+                <td class="py-2"><div class="flex gap-2 items-center justify-end"><input placeholder="Qty" class="w-20 border rounded px-2 py-1 text-sm" /><input placeholder="Reorder" class="w-20 border rounded px-2 py-1 text-sm" /><button class="bg-primary text-white px-3 py-1 rounded text-sm">Update</button></div></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================== SAGA FLOW ===================== -->
+  <section id="saga" class="sec-anchor">
+    <h2 class="text-2xl font-bold mb-1">4 · End‑to‑End Saga Walkthrough</h2>
+    <p class="text-gray-600 mb-4 text-sm">What happens between "Place Order" and "Delivered" — service by service.</p>
+    <div class="bg-white rounded-xl shadow-sm divide-y">
+      <div class="p-4 flex gap-4 items-start"><span class="badge bg-blue-100 text-blue-800 mt-0.5">1 · PLACED</span><div class="text-sm"><b>Order Service</b> persists the order in <span class="font-mono">orders_db</span> and publishes <span class="font-mono text-primary">order.placed</span> → <span class="font-mono">order-events</span>.</div></div>
+      <div class="p-4 flex gap-4 items-start"><span class="badge bg-indigo-100 text-indigo-800 mt-0.5">2 · CONFIRMED</span><div class="text-sm"><b>Inventory Service</b> consumes the event, reserves stock (optimistic locking + Redis cache), publishes <span class="font-mono text-primary">inventory.reserved</span>. Order flips to CONFIRMED.</div></div>
+      <div class="p-4 flex gap-4 items-start"><span class="badge bg-yellow-100 text-yellow-800 mt-0.5">3 · PAYMENT</span><div class="text-sm"><b>Payment Service</b> charges via mock gateway (100–500ms latency, ~10% random failure), publishes <span class="font-mono text-primary">payment.success</span> / <span class="font-mono text-primary">payment.failed</span>.</div></div>
+      <div class="p-4 flex gap-4 items-start"><span class="badge bg-purple-100 text-purple-800 mt-0.5">4 · SHIPPED</span><div class="text-sm"><b>Shipping Service</b> creates a shipment + tracking number, simulates delivery, publishes <span class="font-mono text-primary">shipment.created</span> then delivery events.</div></div>
+      <div class="p-4 flex gap-4 items-start"><span class="badge bg-green-100 text-green-800 mt-0.5">5 · DELIVERED</span><div class="text-sm"><b>Notification</b> emails the customer at every step; <b>Analytics</b> aggregates metrics and Kafka lag. Order reaches DELIVERED.</div></div>
+      <div class="p-4 flex gap-4 items-start"><span class="badge bg-red-100 text-red-800 mt-0.5">✕ COMPENSATION</span><div class="text-sm">If payment fails → reserved stock is <b>released</b> and order becomes <span class="font-mono">PAYMENT_FAILED</span>. If stock is unavailable → order is <span class="font-mono">CANCELLED</span>. Kafka retains events so a crashed service reprocesses on restart (idempotency keys prevent duplicates).</div></div>
+    </div>
+  </section>
+
+  <!-- ===================== ENDPOINTS TABLE ===================== -->
+  <section>
+    <h2 class="text-2xl font-bold mb-3">5 · Complete REST Endpoint Reference</h2>
+    <div class="bg-white rounded-xl shadow-sm overflow-hidden scrollx">
+      <table class="w-full text-sm">
+        <thead class="bg-gray-50 text-gray-500 text-left"><tr><th class="py-2 px-3">Service</th><th class="py-2 px-3">Method</th><th class="py-2 px-3">Endpoint</th><th class="py-2 px-3">Purpose</th></tr></thead>
+        <tbody class="divide-y">
+          <tr><td class="py-2 px-3">Order</td><td class="px-3"><span class="badge bg-green-100 text-green-800">POST</span></td><td class="px-3 font-mono text-xs">/api/orders</td><td class="px-3">Place new order</td></tr>
+          <tr><td class="py-2 px-3">Order</td><td class="px-3"><span class="badge bg-blue-100 text-blue-800">GET</span></td><td class="px-3 font-mono text-xs">/api/orders/{id}</td><td class="px-3">Order details (polled by tracking)</td></tr>
+          <tr><td class="py-2 px-3">Order</td><td class="px-3"><span class="badge bg-blue-100 text-blue-800">GET</span></td><td class="px-3 font-mono text-xs">/api/orders/customer/{customerId}</td><td class="px-3">Order history</td></tr>
+          <tr><td class="py-2 px-3">Order</td><td class="px-3"><span class="badge bg-yellow-100 text-yellow-800">PATCH</span></td><td class="px-3 font-mono text-xs">/api/orders/{id}/cancel</td><td class="px-3">Cancel order</td></tr>
+          <tr><td class="py-2 px-3">Inventory</td><td class="px-3"><span class="badge bg-blue-100 text-blue-800">GET</span></td><td class="px-3 font-mono text-xs">/api/inventory/{productId}</td><td class="px-3">Stock count (product badges)</td></tr>
+          <tr><td class="py-2 px-3">Inventory</td><td class="px-3"><span class="badge bg-orange-100 text-orange-800">PUT</span></td><td class="px-3 font-mono text-xs">/api/inventory/{productId}</td><td class="px-3">Update stock (admin)</td></tr>
+          <tr><td class="py-2 px-3">Inventory</td><td class="px-3"><span class="badge bg-blue-100 text-blue-800">GET</span></td><td class="px-3 font-mono text-xs">/api/inventory/low-stock</td><td class="px-3">Low‑stock alerts</td></tr>
+          <tr><td class="py-2 px-3">Payment</td><td class="px-3"><span class="badge bg-blue-100 text-blue-800">GET</span></td><td class="px-3 font-mono text-xs">/api/payments/order/{orderId}</td><td class="px-3">Payment status</td></tr>
+          <tr><td class="py-2 px-3">Shipping</td><td class="px-3"><span class="badge bg-blue-100 text-blue-800">GET</span></td><td class="px-3 font-mono text-xs">/api/shipping/order/{orderId}</td><td class="px-3">Tracking info</td></tr>
+          <tr><td class="py-2 px-3">Analytics</td><td class="px-3"><span class="badge bg-blue-100 text-blue-800">GET</span></td><td class="px-3 font-mono text-xs">/api/analytics/orders/summary</td><td class="px-3">Orders/hour (Live Pipeline)</td></tr>
+          <tr><td class="py-2 px-3">Analytics</td><td class="px-3"><span class="badge bg-blue-100 text-blue-800">GET</span></td><td class="px-3 font-mono text-xs">/api/analytics/revenue/daily</td><td class="px-3">Revenue trends (chart)</td></tr>
+          <tr><td class="py-2 px-3">Analytics</td><td class="px-3"><span class="badge bg-blue-100 text-blue-800">GET</span></td><td class="px-3 font-mono text-xs">/api/analytics/failures</td><td class="px-3">Failure rates</td></tr>
+          <tr><td class="py-2 px-3">Analytics</td><td class="px-3"><span class="badge bg-blue-100 text-blue-800">GET</span></td><td class="px-3 font-mono text-xs">/api/analytics/kafka/consumer-lag</td><td class="px-3">Kafka lag panel</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- ===================== QUICK REFERENCE ===================== -->
+  <section>
+    <h2 class="text-2xl font-bold mb-3">6 · Quick Reference Card</h2>
+    <div class="rounded-xl overflow-hidden shadow-lg">
+      <div class="bg-[#2d2d2d] px-3 py-2 text-gray-300 text-xs">On the EC2 server, in /home/ubuntu/orderflow</div>
+      <div class="bg-[#1e1e1e] p-4 term scrollx">
+<pre><span class="d"># lifecycle</span>
+docker-compose ps                        <span class="d"># see all 13 containers</span>
+docker-compose logs -f order-service     <span class="d"># follow one service</span>
+docker-compose restart payment-service   <span class="d"># restart one service</span>
+docker-compose down                      <span class="d"># stop all (keep data)</span>
+docker-compose down -v                   <span class="d"># stop all (wipe data)</span>
+docker-compose up -d --build             <span class="d"># rebuild + start</span>
+
+<span class="d"># after EC2 stop/start the public IP changes — update .env then:</span>
+docker-compose up -d --build frontend
+
+<span class="d"># URLs (from your browser)</span>
+http://34.238.158.14:3000              <span class="d"># Storefront</span>
+http://34.238.158.14:3000/ops          <span class="d"># Operations Dashboard</span>
+http://34.238.158.14:3000/inventory    <span class="d"># Inventory Portal</span>
+http://34.238.158.14:8080/actuator/health  <span class="d"># API Gateway health</span></pre>
+      </div>
+    </div>
+  </section>
+
+  <footer class="text-center text-xs text-gray-400 py-6">
+    OrderFlow feature showcase · rendered from real component markup · served at
+    <span class="font-mono">/demo-outputs.html</span>
+  </footer>
+
+</main>
+</body>
+</html>

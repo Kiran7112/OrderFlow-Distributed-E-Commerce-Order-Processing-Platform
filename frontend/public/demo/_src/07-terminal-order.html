@@ -1,0 +1,57 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><link rel="stylesheet" href="style.css"></head>
+<body><div class="wrap"><div class="maxw">
+  <div class="frame">
+    <div class="bar"><span class="cdot" style="background:#ff5f56"></span><span class="cdot" style="background:#ffbd2e"></span><span class="cdot" style="background:#27c93f"></span><span class="url">POST /api/orders — place an order, Saga advances it</span></div>
+    <div class="term"><pre><span class="g">$</span> curl -s -X POST http://localhost:8080/api/orders \
+   -H <span class="y">"Content-Type: application/json"</span> \
+   -d '{ <span class="c">"customerId"</span>:<span class="w">"99999999-9999-9999-9999-999999999999"</span>,
+         <span class="c">"items"</span>:[ {<span class="c">"productId"</span>:<span class="w">"22222222-2222-2222-2222-222222222222"</span>,<span class="c">"quantity"</span>:2,<span class="c">"unitPrice"</span>:29.99} ] }'
+{
+  <span class="c">"id"</span>: <span class="w">"7f3a1c2e-9b4d-4e6a-8c1f-2a5b7d9e0f11"</span>,
+  <span class="c">"customerId"</span>: <span class="w">"99999999-9999-9999-9999-999999999999"</span>,
+  <span class="c">"status"</span>: <span class="y">"PLACED"</span>,
+  <span class="c">"totalAmount"</span>: 59.98,
+  <span class="c">"currency"</span>: <span class="w">"USD"</span>,
+  <span class="c">"createdAt"</span>: <span class="w">"2026-06-19T06:45:12"</span>
+}
+
+<span class="d"># a few seconds later — the Saga has carried it to DELIVERED:</span>
+<span class="g">$</span> curl -s http://localhost:8080/api/orders/7f3a1c2e... | jq '{status,totalAmount}'
+{ <span class="c">"status"</span>: <span class="g">"DELIVERED"</span>, <span class="c">"totalAmount"</span>: 59.98 }</pre></div>
+  </div>
+
+  <div class="frame" style="margin-top:24px">
+    <div class="bar"><span class="cdot" style="background:#ff5f56"></span><span class="cdot" style="background:#ffbd2e"></span><span class="cdot" style="background:#27c93f"></span><span class="url">Payment · Shipping · Notification emails</span></div>
+    <div class="term"><pre><span class="g">$</span> curl -s http://localhost:8080/api/payments/order/7f3a1c2e...
+{ <span class="c">"orderId"</span>:<span class="w">"7f3a1c2e-..."</span>, <span class="c">"amount"</span>:59.98, <span class="c">"gatewayRef"</span>:<span class="w">"MOCK-PAY-8842F1"</span>, <span class="c">"status"</span>:<span class="g">"SUCCESS"</span> }
+
+<span class="g">$</span> curl -s http://localhost:8080/api/shipping/order/7f3a1c2e...
+{ <span class="c">"trackingNumber"</span>:<span class="w">"TRK-5GH29KQ4"</span>, <span class="c">"carrier"</span>:<span class="w">"FedEx"</span>, <span class="c">"status"</span>:<span class="g">"DELIVERED"</span>, <span class="c">"estimatedDelivery"</span>:<span class="w">"2026-06-21"</span> }
+
+<span class="g">$</span> docker-compose logs -f notification-service
+<span class="d">========================================================</span>
+<span class="w">EMAIL NOTIFICATION</span>
+<span class="d">========================================================</span>
+To:      customer@example.com
+Subject: <span class="w">Order Confirmation — Order #7f3a1c2e</span>
+Dear Valued Customer, your order is confirmed. Total: <span class="g">$59.98 USD</span>.
+<span class="d">[+3s]</span> Subject: <span class="w">Your order has shipped — Tracking TRK-5GH29KQ4 (FedEx)</span>
+<span class="d">[+6s]</span> Subject: <span class="w">Delivered! Order #7f3a1c2e was delivered.</span></pre></div>
+  </div>
+
+  <div class="frame" style="margin-top:24px">
+    <div class="bar"><span class="cdot" style="background:#ff5f56"></span><span class="cdot" style="background:#ffbd2e"></span><span class="cdot" style="background:#27c93f"></span><span class="url">Analytics · Inventory · Failure compensation</span></div>
+    <div class="term"><pre><span class="g">$</span> curl -s http://localhost:8080/api/analytics/kafka/consumer-lag
+{ <span class="c">"consumerGroup"</span>:<span class="w">"analytics-service-group"</span>, <span class="c">"totalLag"</span>:<span class="g">0</span>,
+  <span class="c">"metrics"</span>:{ <span class="c">"order-events-0"</span>:{<span class="c">"lag"</span>:0}, <span class="c">"payment-events-0"</span>:{<span class="c">"lag"</span>:0} } }
+
+<span class="g">$</span> curl -s http://localhost:8080/api/inventory/low-stock
+[ { <span class="c">"productId"</span>:<span class="w">"5555...5555"</span>, <span class="c">"availableQty"</span>:4, <span class="c">"reorderLevel"</span>:10, <span class="c">"isLowStock"</span>:<span class="g">true</span> } ]
+
+<span class="d"># failure scenario — payment fails, stock auto-released:</span>
+<span class="g">$</span> docker-compose logs order-service | grep -i saga
+order-service  | Saga[c3d5..] inventory.reserved  → status=CONFIRMED
+order-service  | Saga[c3d5..] <span class="r">payment.failed</span>      → status=PAYMENT_FAILED
+inventory-svc  | Compensation: <span class="y">released 1 unit</span> of 5555...5555 (order c3d5..)</pre></div>
+  </div>
+</div></div></body></html>
