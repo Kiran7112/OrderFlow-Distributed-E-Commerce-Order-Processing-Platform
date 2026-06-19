@@ -2,6 +2,12 @@
 
 A complete microservices-based e-commerce order processing system demonstrating Kafka event-driven architecture, Saga pattern, and distributed transactions.
 
+## 🏛️ System Design — High-Level Architecture
+
+![OrderFlow high-level system design: React SPA → API Gateway → 7 Spring Boot microservices over an Apache Kafka event backbone, with a dedicated PostgreSQL database per service, Redis cache, all containerized on AWS EC2](frontend/public/demo/images/00-system-design.png)
+
+*Clients → React portals → API Gateway (sync REST) → microservices that communicate **asynchronously via Kafka** → database-per-service. The Saga flow `PLACED → CONFIRMED → SHIPPED → DELIVERED` runs across services with automatic compensation on failure.*
+
 ## 📸 Live Demo — Feature Screenshots
 
 > Captured from the live stack on EC2 (`http://34.238.158.14:3000`). Each tab below is collapsible — click a title to expand its screenshot.
